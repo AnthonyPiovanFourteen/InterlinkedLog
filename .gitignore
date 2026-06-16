@@ -1,0 +1,112 @@
+# ══════════════════════════════════════════════
+# Dependências
+# ══════════════════════════════════════════════
+node_modules/
+/vendor/
+backend/vendor/
+
+# ══════════════════════════════════════════════
+# Build output
+# ══════════════════════════════════════════════
+dist/
+dist-ssr/
+.output/
+.vinxi/
+.nitro/
+*.tsbuildinfo
+
+# ══════════════════════════════════════════════
+# Logs
+# ══════════════════════════════════════════════
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+/storage/logs/
+backend/storage/logs/
+
+# ══════════════════════════════════════════════
+# Ambiente / Secrets
+# ══════════════════════════════════════════════
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+
+# ══════════════════════════════════════════════
+# Banco de dados
+# ══════════════════════════════════════════════
+*.sqlite
+*.sqlite3
+database/database.sqlite
+backend/database/database.sqlite
+
+# ══════════════════════════════════════════════
+# Cache
+# ══════════════════════════════════════════════
+bootstrap/cache/*
+backend/bootstrap/cache/*
+.bun/
+.vite/
+*.cache
+
+# ══════════════════════════════════════════════
+# PIDs
+# ══════════════════════════════════════════════
+.pids/
+
+# ══════════════════════════════════════════════
+# Uploads locais
+# ══════════════════════════════════════════════
+storage/app/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/testing/*
+storage/framework/views/*
+backend/storage/app/*
+backend/storage/framework/*
+backend/storage/data/*
+
+# ══════════════════════════════════════════════
+# Cloudflare / Wrangler
+# ══════════════════════════════════════════════
+.wrangler/
+.dev.vars
+
+# ══════════════════════════════════════════════
+# IDE / Editor
+# ══════════════════════════════════════════════
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.swo
+*~
+
+# ══════════════════════════════════════════════
+# OS
+# ══════════════════════════════════════════════
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ══════════════════════════════════════════════
+# Lock files de outros gerenciadores
+# ══════════════════════════════════════════════
+package-lock.json
+composer.lock
+composer.phar
+backend/test-api.sh
