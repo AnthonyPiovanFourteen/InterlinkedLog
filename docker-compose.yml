@@ -4,20 +4,21 @@ services:
     ports:
       - "8080:8000"
     volumes:
-      - backend-data:/app/storage/data
+      - backend-data:/app/database
     restart: unless-stopped
     healthcheck:
       test: curl -sf http://localhost:8000/up || exit 1
       interval: 10s
       timeout: 5s
-      retries: 3
+      retries: 5
+      start_period: 30s
 
   frontend:
     build: .
     ports:
       - "3000:3000"
-    env_file:
-      - .env
+    environment:
+      VITE_API_URL: http://backend:8000
     depends_on:
       backend:
         condition: service_healthy

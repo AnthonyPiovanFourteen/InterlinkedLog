@@ -192,8 +192,14 @@ class QuotationController extends Controller
         }
 
         $ns = $xml->getNamespaces(true);
-        $nfe = $xml->NFe ?? $xml->children($ns[''] ?? '')->NFe;
-        $infNFe = $nfe->infNFe ?? $nfe->children($ns[''] ?? '')->infNFe;
+        $nfe = $xml->NFe ?? $xml->children($ns[''] ?? '')->NFe ?? null;
+        if (!$nfe || !$nfe->count()) {
+            return response()->json(['message' => 'XML não é uma NF-e válida'], 422);
+        }
+        $infNFe = $nfe->infNFe ?? $nfe->children($ns[''] ?? '')->infNFe ?? null;
+        if (!$infNFe || !$infNFe->count()) {
+            return response()->json(['message' => 'NF-e sem infNFe'], 422);
+        }
 
         $extract = function(string $path) use ($infNFe) {
             $parts = explode('/', $path);
