@@ -14,6 +14,7 @@ use App\Models\QuotationResult;
 use App\Models\Contract;
 use App\Models\TrackingEvent;
 use App\Models\SystemLog;
+use App\Domain\Entities\CarrierStatus;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -70,20 +71,20 @@ class DatabaseSeeder extends Seeder
         foreach ($carrierData as [$name, $cnpj, $city, $uf]) {
             $carrier = Carrier::create([
                 'id' => Str::orderedUuid()->toString(),
-                'company_id' => $company->id,
                 'name' => $name,
                 'cnpj' => $cnpj,
                 'origin_city' => $city,
                 'origin_uf' => $uf,
                 'contact_name' => 'Contato ' . $name,
                 'contact_phone' => '(11) 3000-0000',
-                'status' => 'Ativo',
+                'status' => CarrierStatus::ATIVA,
             ]);
             $carrierIds[] = $carrier->id;
 
             // Simple freight table for each carrier
             $ft = FreightTable::create([
                 'id' => Str::orderedUuid()->toString(),
+                'company_id' => $company->id,
                 'carrier_id' => $carrier->id,
                 'name' => 'Tabela Geral ' . $name,
                 'valid_from' => '2026-01-01',

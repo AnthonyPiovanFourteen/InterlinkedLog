@@ -14,25 +14,29 @@ use Illuminate\Support\Str;
 
 class EloquentFreightTableRepository implements FreightTableRepository
 {
-    public function findById(string $id): ?FreightTableEntity
+    public function findById(string $companyId, string $id): ?FreightTableEntity
     {
-        $model = FreightTable::with(['routes.weightRanges', 'fees'])->find($id);
+        $model = FreightTable::with(['routes.weightRanges', 'fees'])
+            ->where('company_id', $companyId)
+            ->find($id);
         if (!$model) return null;
         return $this->toEntity($model);
     }
 
-    public function findByCarrier(string $carrierId): array
+    public function findByCarrier(string $companyId, string $carrierId): array
     {
         return FreightTable::with(['routes.weightRanges', 'fees'])
+            ->where('company_id', $companyId)
             ->where('carrier_id', $carrierId)
             ->get()
             ->map(fn($m) => $this->toEntity($m))
             ->all();
     }
 
-    public function findActiveByCarrierAndRoute(string $carrierId, string $originCity, string $destCity, string $destState): ?FreightTableEntity
+    public function findActiveByCarrierAndRoute(string $companyId, string $carrierId, string $originCity, string $destCity, string $destState): ?FreightTableEntity
     {
         $table = FreightTable::with(['routes.weightRanges', 'fees'])
+            ->where('company_id', $companyId)
             ->where('carrier_id', $carrierId)
             ->where('status', 'Ativa')
             ->whereHas('routes', function ($q) use ($destCity, $destState) {
@@ -45,9 +49,10 @@ class EloquentFreightTableRepository implements FreightTableRepository
         return $this->toEntity($table);
     }
 
-    public function findAll(array $filters = []): array
+    public function findAll(string $companyId, array $filters = []): array
     {
-        $query = FreightTable::with(['routes.weightRanges', 'fees']);
+        $query = FreightTable::with(['routes.weightRanges', 'fees'])
+            ->where('company_id', $companyId);
 
         if (!empty($filters['carrier_id'])) {
             $query->where('carrier_id', $filters['carrier_id']);
@@ -70,6 +75,7 @@ class EloquentFreightTableRepository implements FreightTableRepository
                 ['id' => $id],
                 [
                                     'id' => $id,
+                    'company_id' => $table->companyId,
                     'carrier_id' => $table->carrierId,
                     'name' => $table->name,
                     'valid_from' => $table->validityStart,
@@ -134,9 +140,11 @@ class EloquentFreightTableRepository implements FreightTableRepository
         });
     }
 
-    public function delete(string $id): void
+    public function delete(string $companyId, string $id): void
     {
-        FreightTable::destroy($id);
+        FreightTable::where('company_id', $companyId)
+            ->where('id', $id)
+            ->delete();
     }
 
     private function toEntity(FreightTable $model): FreightTableEntity
@@ -176,6 +184,7 @@ class EloquentFreightTableRepository implements FreightTableRepository
 
         return new FreightTableEntity(
             id: $model->id,
+            companyId: $model->company_id,
             name: $model->name,
             carrierId: $model->carrier_id,
             originCity: $model->routes->first()?->origin_city ?? '',

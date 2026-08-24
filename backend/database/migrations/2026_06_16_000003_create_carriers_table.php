@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('contact_name')->nullable();
             $table->string('contact_phone')->nullable();
             $table->string('contact_email')->nullable();
-            $table->string('status', 20)->default('Ativo');
+            $table->string('status', 20)->default('Ativa');
             $table->timestamps();
         });
     }

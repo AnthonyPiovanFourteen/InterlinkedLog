@@ -6,6 +6,7 @@ class FreightTable
 {
     public function __construct(
         public readonly ?string $id,
+        public readonly string $companyId,
         public readonly string $name,
         public readonly string $carrierId,
         public readonly string $originCity,
@@ -21,6 +22,7 @@ class FreightTable
 
     public static function create(
         string $id,
+        string $companyId,
         string $name,
         string $carrierId,
         string $originCity,
@@ -29,6 +31,7 @@ class FreightTable
     ): self {
         return new self(
             id: $id,
+            companyId: $companyId,
             name: $name,
             carrierId: $carrierId,
             originCity: $originCity,

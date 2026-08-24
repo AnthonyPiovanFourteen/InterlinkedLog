@@ -62,13 +62,21 @@ class RepositorySaveAtomicityTest extends ApiTestCase
 
     public function test_freight_table_parent_is_rolled_back_when_child_writes_fail(): void
     {
-        $carrierId = Carrier::first()->id;
+        $carrier = Carrier::create([
+            'id' => Str::orderedUuid()->toString(),
+            'name' => 'Transportadora Sem Tabela',
+            'cnpj' => '77.777.777/0001-77',
+            'origin_city' => 'São Paulo',
+            'origin_uf' => 'SP',
+            'status' => 'Ativa',
+        ]);
         $id = Str::orderedUuid()->toString();
 
         $table = new FreightTableEntity(
             id: $id,
+            companyId: $this->adminCompanyId,
             name: 'Tabela Inválida',
-            carrierId: $carrierId,
+            carrierId: $carrier->id,
             originCity: 'São Paulo',
             validityStart: '2026-01-01',
             validityEnd: '2026-12-31',

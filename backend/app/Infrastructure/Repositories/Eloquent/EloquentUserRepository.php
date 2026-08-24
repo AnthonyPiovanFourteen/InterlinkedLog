@@ -4,6 +4,7 @@ namespace App\Infrastructure\Repositories\Eloquent;
 
 use App\Domain\Entities\User as UserEntity;
 use App\Domain\Repositories\UserRepository;
+use App\Infrastructure\Tenancy\TenantScope;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ class EloquentUserRepository implements UserRepository
 
     public function findByEmail(string $email): ?UserEntity
     {
-        $model = User::where('email', $email)->first();
+        $model = User::withoutGlobalScope(TenantScope::class)->where('email', $email)->first();
         if (!$model) return null;
         return $this->toEntity($model);
     }

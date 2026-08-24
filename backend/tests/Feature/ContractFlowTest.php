@@ -47,7 +47,16 @@ class ContractFlowTest extends ApiTestCase
     public function test_contract_with_quotation_from_another_tenant_returns_404(): void
     {
         $tenantB = $this->createTenant('b@interlinked.io');
+        $carrierB = $this->postJson('/api/v1/carriers', [
+            'name' => 'Transportadora do Tenant B',
+            'cnpj' => '11.111.111/0001-11',
+            'origin_city' => 'São Paulo',
+            'origin_state' => 'SP',
+        ], $this->authHeaders($tenantB['token']))->assertStatus(201)->json('data');
+
+        $this->createFreightTable($carrierB['id'], token: $tenantB['token']);
         $quotationB = $this->createQuotation($tenantB['token']);
+        $this->assertNotEmpty($quotationB['results']);
 
         $response = $this->postJson('/api/v1/contracts', [
             'quotation_id' => $quotationB['id'],

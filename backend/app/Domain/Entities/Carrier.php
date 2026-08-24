@@ -34,7 +34,7 @@ class Carrier
             cnpj: $cnpj,
             originCity: $originCity,
             originState: $originState,
-            status: 'Ativa',
+            status: CarrierStatus::ATIVA,
             contactName: $contactName,
             contactPhone: $contactPhone,
             contactEmail: $contactEmail,

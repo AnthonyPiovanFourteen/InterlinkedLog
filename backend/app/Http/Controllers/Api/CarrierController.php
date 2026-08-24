@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Entities\Carrier;
+use App\Domain\Entities\CarrierStatus;
+use App\Domain\Entities\Role;
 use App\Domain\Repositories\CarrierRepository;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +15,16 @@ use Illuminate\Support\Str;
 class CarrierController extends Controller
 {
     public function __construct(private CarrierRepository $repository) {}
+
+    private function isAdmin(Request $request): bool
+    {
+        return $request->attributes->get('user_role') === Role::ADMIN;
+    }
+
+    private function adminDenied(): JsonResponse
+    {
+        return response()->json(['message' => 'Acesso restrito a administradores'], 403);
+    }
 
     public function index(): JsonResponse
     {
@@ -34,6 +46,10 @@ class CarrierController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (!$this->isAdmin($request)) {
+            return $this->adminDenied();
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'cnpj' => 'required|string|max:18',
@@ -79,6 +95,10 @@ class CarrierController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
+        if (!$this->isAdmin($request)) {
+            return $this->adminDenied();
+        }
+
         $carrier = $this->repository->findById($id);
         if (!$carrier) return response()->json(['message' => 'Transportadora não encontrada'], 404);
 
@@ -86,7 +106,7 @@ class CarrierController extends Controller
             'name' => 'sometimes|string|max:255',
             'origin_city' => 'sometimes|string|max:255',
             'origin_state' => 'sometimes|string|size:2',
-            'status' => 'sometimes|string|in:Ativa,Inativa',
+            'status' => 'sometimes|string|in:' . implode(',', CarrierStatus::all()),
             'contact_name' => 'nullable|string|max:255',
             'contact_phone' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email',
@@ -113,8 +133,12 @@ class CarrierController extends Controller
         return response()->json(['data' => ['id' => $updated->id, 'name' => $updated->name, 'status' => $updated->status]]);
     }
 
-    public function destroy(string $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
+        if (!$this->isAdmin($request)) {
+            return $this->adminDenied();
+        }
+
         if (!$this->repository->findById($id)) {
             return response()->json(['message' => 'Transportadora não encontrada'], 404);
         }

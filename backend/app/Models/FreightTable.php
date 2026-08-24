@@ -2,15 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class FreightTable extends Model
 {
+    use TenantScoped;
+
     public $incrementing = false;
     protected $keyType = 'string';
 
     protected $fillable = [
         'id',
+        'company_id',
         'carrier_id',
         'name',
         'valid_from',

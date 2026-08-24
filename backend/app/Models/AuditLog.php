@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model
 {
+    use TenantScoped;
+
     public $incrementing = false;
     protected $keyType = 'string';
 

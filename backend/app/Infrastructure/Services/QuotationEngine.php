@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Services;
 
+use App\Domain\Entities\CarrierStatus;
 use App\Domain\Entities\Quotation;
 use App\Domain\Repositories\CarrierRepository;
 use App\Domain\Repositories\FreightTableRepository;
@@ -42,9 +43,10 @@ class QuotationEngine implements QuotationEngineService
         $carriers = $this->carrierRepository->findAll();
 
         foreach ($carriers as $carrier) {
-            if ($carrier->status !== 'Ativo') continue;
+            if ($carrier->status !== CarrierStatus::ATIVA) continue;
 
             $table = $this->freightTableRepository->findActiveByCarrierAndRoute(
+                $quotation->companyId,
                 $carrier->id,
                 $quotation->originCity,
                 $quotation->destinationCity,

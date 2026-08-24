@@ -3,6 +3,7 @@
 namespace App\Infrastructure\Repositories\Eloquent;
 
 use App\Domain\Entities\Carrier as CarrierEntity;
+use App\Domain\Entities\CarrierStatus;
 use App\Domain\Repositories\CarrierRepository;
 use App\Models\Carrier;
 use Illuminate\Support\Str;
@@ -25,7 +26,7 @@ class EloquentCarrierRepository implements CarrierRepository
 
     public function findByOrigin(string $city, string $state): array
     {
-        return Carrier::where('status', 'Ativa')
+        return Carrier::where('status', CarrierStatus::ATIVA)
             ->where('origin_city', 'like', $city)
             ->where('origin_uf', $state)
             ->get()

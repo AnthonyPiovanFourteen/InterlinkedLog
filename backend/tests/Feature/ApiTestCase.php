@@ -18,6 +18,7 @@ abstract class ApiTestCase extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->app->instance('request', \Illuminate\Http\Request::create('/'));
         $this->seed();
 
         $login = $this->postJson('/api/v1/login', [
@@ -84,5 +85,46 @@ abstract class ApiTestCase extends TestCase
         $response->assertStatus(201);
 
         return $response->json('data');
+    }
+
+    protected function createCarrier(array $overrides = [], ?string $token = null): array
+    {
+        $response = $this->postJson('/api/v1/carriers', array_merge([
+            'name' => 'Transportadora Teste',
+            'cnpj' => '11.111.111/0001-11',
+            'origin_city' => 'São Paulo',
+            'origin_state' => 'SP',
+        ], $overrides), $this->authHeaders($token));
+
+        $response->assertStatus(201);
+
+        return $response->json('data');
+    }
+
+    protected function createFreightTable(
+        string $carrierId,
+        array $overrides = [],
+        ?string $token = null,
+    ): array {
+        $response = $this->postJson('/api/v1/freight-tables', array_merge([
+            'name' => 'Tabela Teste',
+            'carrier_id' => $carrierId,
+            'origin_city' => 'São Paulo',
+            'validity_start' => '2026-01-01',
+            'validity_end' => '2026-12-31',
+            'routes' => [['city' => 'Londrina', 'state' => 'PR', 'deadline' => 2]],
+            'weight_ranges' => [['start' => 0, 'end' => 100, 'value' => 150]],
+            'fees' => [],
+        ], $overrides), $this->authHeaders($token));
+
+        $response->assertStatus(201);
+
+        $table = $response->json('data');
+
+        $this->patchJson('/api/v1/freight-tables/' . $table['id'], [
+            'status' => 'Ativa',
+        ], $this->authHeaders($token))->assertOk();
+
+        return $table;
     }
 }

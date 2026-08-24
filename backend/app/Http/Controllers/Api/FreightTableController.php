@@ -16,11 +16,12 @@ class FreightTableController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        $companyId = $request->attributes->get('company_id');
         $filters = [];
         if ($request->has('carrier_id')) $filters['carrier_id'] = $request->input('carrier_id');
         if ($request->has('status')) $filters['status'] = $request->input('status');
 
-        $tables = $this->repository->findAll($filters);
+        $tables = $this->repository->findAll($companyId, $filters);
 
         $data = array_map(fn(FreightTable $t) => [
             'id' => $t->id,
@@ -64,8 +65,11 @@ class FreightTableController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
+        $companyId = $request->attributes->get('company_id');
+
         $table = FreightTable::create(
             id: Str::orderedUuid()->toString(),
+            companyId: $companyId,
             name: $request->input('name'),
             carrierId: $request->input('carrier_id'),
             originCity: $request->input('origin_city'),
@@ -74,7 +78,7 @@ class FreightTableController extends Controller
         );
 
         $table = new FreightTable(
-            id: $table->id, name: $table->name, carrierId: $table->carrierId,
+            id: $table->id, companyId: $table->companyId, name: $table->name, carrierId: $table->carrierId,
             originCity: $table->originCity,
             validityStart: $table->validityStart, validityEnd: $table->validityEnd,
             status: $table->status,
@@ -88,9 +92,10 @@ class FreightTableController extends Controller
         return response()->json(['data' => ['id' => $table->id, 'name' => $table->name]], 201);
     }
 
-    public function show(string $id): JsonResponse
+    public function show(Request $request, string $id): JsonResponse
     {
-        $table = $this->repository->findById($id);
+        $companyId = $request->attributes->get('company_id');
+        $table = $this->repository->findById($companyId, $id);
         if (!$table) return response()->json(['message' => 'Tabela não encontrada'], 404);
 
         return response()->json([
@@ -108,11 +113,13 @@ class FreightTableController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $table = $this->repository->findById($id);
+        $companyId = $request->attributes->get('company_id');
+        $table = $this->repository->findById($companyId, $id);
         if (!$table) return response()->json(['message' => 'Tabela não encontrada'], 404);
 
         $updated = new FreightTable(
             id: $table->id,
+            companyId: $table->companyId,
             name: $request->input('name', $table->name),
             carrierId: $table->carrierId,
             originCity: $request->input('origin_city', $table->originCity),
@@ -131,12 +138,13 @@ class FreightTableController extends Controller
         return response()->json(['data' => ['id' => $updated->id, 'name' => $updated->name, 'status' => $updated->status]]);
     }
 
-    public function destroy(string $id): JsonResponse
+    public function destroy(Request $request, string $id): JsonResponse
     {
-        if (!$this->repository->findById($id)) {
+        $companyId = $request->attributes->get('company_id');
+        if (!$this->repository->findById($companyId, $id)) {
             return response()->json(['message' => 'Tabela não encontrada'], 404);
         }
-        $this->repository->delete($id);
+        $this->repository->delete($companyId, $id);
         return response()->json(['message' => 'Tabela removida']);
     }
 }
