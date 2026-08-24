@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -53,7 +54,7 @@ class UserController extends Controller
         }
 
         $user = User::create(
-            id: uuid_create(),
+            id: Str::orderedUuid()->toString(),
             name: $request->input('name'),
             email: $request->input('email'),
             passwordHash: password_hash($request->input('password'), PASSWORD_BCRYPT),

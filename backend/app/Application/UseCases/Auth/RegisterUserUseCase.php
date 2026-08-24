@@ -6,6 +6,7 @@ use App\Domain\Entities\Company;
 use App\Domain\Entities\User;
 use App\Domain\Repositories\CompanyRepository;
 use App\Domain\Repositories\UserRepository;
+use Illuminate\Support\Str;
 
 class RegisterUserUseCase
 {
@@ -22,12 +23,12 @@ class RegisterUserUseCase
 
         $company = $this->companyRepository->findById($data['company_id']);
         if (!$company) {
-            $company = Company::create(uuid_create(), $data['company_name'], $data['company_cnpj'] ?? '');
+            $company = Company::create(Str::orderedUuid()->toString(), $data['company_name'], $data['company_cnpj'] ?? '');
             $this->companyRepository->save($company);
         }
 
         $user = User::create(
-            id: uuid_create(),
+            id: Str::orderedUuid()->toString(),
             name: $data['name'],
             email: $data['email'],
             passwordHash: password_hash($data['password'], PASSWORD_BCRYPT),

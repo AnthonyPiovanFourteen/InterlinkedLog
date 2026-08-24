@@ -6,6 +6,7 @@ use App\Domain\Entities\Quotation as QuotationEntity;
 use App\Domain\Repositories\QuotationRepository;
 use App\Models\Quotation;
 use App\Models\QuotationResult;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class EloquentQuotationRepository implements QuotationRepository
@@ -13,6 +14,13 @@ class EloquentQuotationRepository implements QuotationRepository
     public function findById(string $id): ?QuotationEntity
     {
         $model = Quotation::with('results')->find($id);
+        if (!$model) return null;
+        return $this->toEntity($model);
+    }
+
+    public function findByIdForUpdate(string $id): ?QuotationEntity
+    {
+        $model = Quotation::with('results')->whereKey($id)->lockForUpdate()->first();
         if (!$model) return null;
         return $this->toEntity($model);
     }
@@ -66,21 +74,23 @@ class EloquentQuotationRepository implements QuotationRepository
         );
 
         if (!empty($quotation->results)) {
-            QuotationResult::where('quotation_id', $id)->delete();
+            DB::transaction(function () use ($id, $quotation) {
+                QuotationResult::where('quotation_id', $id)->delete();
 
-            foreach ($quotation->results as $result) {
-                QuotationResult::create([
-                    'id' => uuid_create(),
-                    'quotation_id' => $id,
-                    'carrier_id' => $result['carrier_id'],
-                    'carrier_name' => $result['carrier_name'],
-                    'freight_value' => $result['freight_value'],
-                    'fees' => $result['fees'],
-                    'final_value' => $result['final_value'],
-                    'deadline' => $result['deadline'],
-                    'fees_breakdown' => $result['fees_breakdown'] ?? null,
-                ]);
-            }
+                foreach ($quotation->results as $result) {
+                    QuotationResult::create([
+                        'id' => Str::orderedUuid()->toString(),
+                        'quotation_id' => $id,
+                        'carrier_id' => $result['carrier_id'],
+                        'carrier_name' => $result['carrier_name'],
+                        'freight_value' => $result['freight_value'],
+                        'fees' => $result['fees'],
+                        'final_value' => $result['final_value'],
+                        'deadline' => $result['deadline'],
+                        'fees_breakdown' => $result['fees_breakdown'] ?? null,
+                    ]);
+                }
+            });
         }
     }
 

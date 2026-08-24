@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class TrackingController extends Controller
 {
@@ -81,7 +82,7 @@ class TrackingController extends Controller
         }
 
         $event = TrackingEvent::create(
-            id: uuid_create(),
+            id: Str::orderedUuid()->toString(),
             contractId: $contractId,
             title: $request->input('title'),
             date: $request->input('date'),

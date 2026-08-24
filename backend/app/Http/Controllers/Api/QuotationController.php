@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class QuotationController extends Controller
 {
@@ -69,7 +70,7 @@ class QuotationController extends Controller
         $destCity = $this->engine->cepToCity($request->input('destination_cep'));
 
         $quotation = Quotation::create(
-            id: uuid_create(),
+            id: Str::orderedUuid()->toString(),
             companyId: $companyId, userId: $userId,
             nfNumber: $request->input('nf_number'),
             senderCnpj: $request->input('sender_cnpj'),

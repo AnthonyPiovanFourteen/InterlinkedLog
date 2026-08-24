@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AuditLogController extends Controller
 {
@@ -57,7 +58,7 @@ class AuditLogController extends Controller
         }
 
         $log = AuditLog::create(
-            id: uuid_create(),
+            id: Str::orderedUuid()->toString(),
             companyId: $companyId,
             userId: $user['id'] ?? '',
             userName: $user['name'] ?? 'Sistema',

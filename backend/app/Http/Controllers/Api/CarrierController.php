@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class CarrierController extends Controller
 {
@@ -48,7 +49,7 @@ class CarrierController extends Controller
         }
 
         $carrier = Carrier::create(
-            id: uuid_create(),
+            id: Str::orderedUuid()->toString(),
             name: $request->input('name'),
             cnpj: $request->input('cnpj'),
             originCity: $request->input('origin_city'),

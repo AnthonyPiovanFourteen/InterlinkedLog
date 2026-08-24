@@ -9,6 +9,7 @@ use App\Models\FreightTable;
 use App\Models\FreightTableFee;
 use App\Models\FreightTableRoute;
 use App\Models\FreightTableWeightRange;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class EloquentFreightTableRepository implements FreightTableRepository
@@ -77,57 +78,59 @@ class EloquentFreightTableRepository implements FreightTableRepository
             ]
         );
 
-        $carrier = Carrier::find($table->carrierId);
-        $originUf = $carrier?->origin_uf ?? 'SP';
+        DB::transaction(function () use ($id, $table) {
+            $carrier = Carrier::find($table->carrierId);
+            $originUf = $carrier?->origin_uf ?? 'SP';
 
-        if (!empty($table->routes)) {
-            FreightTableRoute::where('freight_table_id', $id)->delete();
+            if (!empty($table->routes)) {
+                FreightTableRoute::where('freight_table_id', $id)->delete();
 
-            $routeModels = [];
-            foreach ($table->routes as $idx => $route) {
-                $routeModel = FreightTableRoute::create([
-                    'id' => uuid_create(),
-                    'freight_table_id' => $id,
-                    'origin_city' => $table->originCity,
-                    'origin_uf' => $originUf,
-                    'destination_city' => $route['city'],
-                    'destination_uf' => $route['state'],
-                ]);
-                $routeModels[] = $routeModel;
-            }
+                $routeModels = [];
+                foreach ($table->routes as $idx => $route) {
+                    $routeModel = FreightTableRoute::create([
+                        'id' => Str::orderedUuid()->toString(),
+                        'freight_table_id' => $id,
+                        'origin_city' => $table->originCity,
+                        'origin_uf' => $originUf,
+                        'destination_city' => $route['city'],
+                        'destination_uf' => $route['state'],
+                    ]);
+                    $routeModels[] = $routeModel;
+                }
 
-            if (!empty($table->weightRanges)) {
-                FreightTableWeightRange::whereHas('route', fn($q) => $q->where('freight_table_id', $id))->delete();
+                if (!empty($table->weightRanges)) {
+                    FreightTableWeightRange::whereHas('route', fn($q) => $q->where('freight_table_id', $id))->delete();
 
-                foreach ($routeModels as $idx => $routeModel) {
-                    $deadline = $table->routes[$idx]['deadline'] ?? 1;
-                    foreach ($table->weightRanges as $wr) {
-                        FreightTableWeightRange::create([
-                            'id' => uuid_create(),
-                            'freight_table_route_id' => $routeModel->id,
-                            'min_weight' => $wr['start'],
-                            'max_weight' => $wr['end'],
-                            'freight_value' => $wr['value'],
-                            'deadline_days' => $deadline,
-                        ]);
+                    foreach ($routeModels as $idx => $routeModel) {
+                        $deadline = $table->routes[$idx]['deadline'] ?? 1;
+                        foreach ($table->weightRanges as $wr) {
+                            FreightTableWeightRange::create([
+                                'id' => Str::orderedUuid()->toString(),
+                                'freight_table_route_id' => $routeModel->id,
+                                'min_weight' => $wr['start'],
+                                'max_weight' => $wr['end'],
+                                'freight_value' => $wr['value'],
+                                'deadline_days' => $deadline,
+                            ]);
+                        }
                     }
                 }
             }
-        }
 
-        if (!empty($table->fees)) {
-            FreightTableFee::where('freight_table_id', $id)->delete();
+            if (!empty($table->fees)) {
+                FreightTableFee::where('freight_table_id', $id)->delete();
 
-            foreach ($table->fees as $fee) {
-                FreightTableFee::create([
-                    'id' => uuid_create(),
-                    'freight_table_id' => $id,
-                    'fee_type' => $fee['type'],
-                    'value' => $fee['value'],
-                    'is_percentage' => ($fee['percentage'] ?? 0) > 0,
-                ]);
+                foreach ($table->fees as $fee) {
+                    FreightTableFee::create([
+                        'id' => Str::orderedUuid()->toString(),
+                        'freight_table_id' => $id,
+                        'fee_type' => $fee['type'],
+                        'value' => $fee['value'],
+                        'is_percentage' => ($fee['percentage'] ?? 0) > 0,
+                    ]);
+                }
             }
-        }
+        });
     }
 
     public function delete(string $id): void

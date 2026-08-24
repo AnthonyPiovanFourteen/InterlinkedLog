@@ -8,6 +8,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class FreightTableController extends Controller
 {
@@ -64,7 +65,7 @@ class FreightTableController extends Controller
         }
 
         $table = FreightTable::create(
-            id: uuid_create(),
+            id: Str::orderedUuid()->toString(),
             name: $request->input('name'),
             carrierId: $request->input('carrier_id'),
             originCity: $request->input('origin_city'),
