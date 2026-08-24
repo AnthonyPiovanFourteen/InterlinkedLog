@@ -64,21 +64,22 @@ class EloquentFreightTableRepository implements FreightTableRepository
     public function save(FreightTableEntity $table): void
     {
         $id = $table->id ?? Str::orderedUuid()->toString();
-        FreightTable::updateOrCreate(
-            ['id' => $id],
-            [
-                                'id' => $id,
-                'carrier_id' => $table->carrierId,
-                'name' => $table->name,
-                'valid_from' => $table->validityStart,
-                'valid_until' => $table->validityEnd,
-                'status' => $table->status,
-                'created_at' => $table->createdAt ?: now(),
-                'updated_at' => $table->updatedAt ?: now(),
-            ]
-        );
 
         DB::transaction(function () use ($id, $table) {
+            FreightTable::updateOrCreate(
+                ['id' => $id],
+                [
+                                    'id' => $id,
+                    'carrier_id' => $table->carrierId,
+                    'name' => $table->name,
+                    'valid_from' => $table->validityStart,
+                    'valid_until' => $table->validityEnd,
+                    'status' => $table->status,
+                    'created_at' => $table->createdAt ?: now(),
+                    'updated_at' => $table->updatedAt ?: now(),
+                ]
+            );
+
             $carrier = Carrier::find($table->carrierId);
             $originUf = $carrier?->origin_uf ?? 'SP';
 

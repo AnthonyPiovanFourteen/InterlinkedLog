@@ -12,9 +12,22 @@ class QuotationFlowTest extends ApiTestCase
         $this->assertCount(8, $quotation['results']);
 
         foreach ($quotation['results'] as $result) {
+            // CARACTERIZAÇÃO: congela comportamento SABIDAMENTE INCORRETO.
+            // weightRanges vem apenas da primeira rota (toEntity), então o valor
+            // abaixo pode não corresponder ao destino cotado. Ver DOC/ArchitecturalReview.md.
+            // Ao corrigir o bug, este número DEVE mudar — não o "conserte" para o teste passar.
             $this->assertSame(142, $result['freight_value']);
+            // CARACTERIZAÇÃO: congela comportamento SABIDAMENTE INCORRETO.
+            // calculateFees soma a taxa percentual em value E em percentage
+            // (mesmo número duas vezes), inflando o total. Ver DOC/ArchitecturalReview.md.
+            // Ao corrigir o bug, este número DEVE mudar — não o "conserte" para o teste passar.
             $this->assertSame(704.20, $result['fees']);
+            // CARACTERIZAÇÃO: deriva de freight_value e fees, ambos com bugs acima.
             $this->assertSame(846.20, $result['final_value']);
+            // CARACTERIZAÇÃO: congela comportamento SABIDAMENTE INCORRETO.
+            // weightRanges vem apenas da primeira rota (toEntity), então o prazo
+            // abaixo pode não corresponder ao destino cotado. Ver DOC/ArchitecturalReview.md.
+            // Ao corrigir o bug, este número DEVE mudar — não o "conserte" para o teste passar.
             $this->assertSame(2, $result['deadline']);
         }
 

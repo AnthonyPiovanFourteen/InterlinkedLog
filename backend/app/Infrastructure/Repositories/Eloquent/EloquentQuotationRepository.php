@@ -48,33 +48,34 @@ class EloquentQuotationRepository implements QuotationRepository
     public function save(QuotationEntity $quotation): void
     {
         $id = $quotation->id ?? Str::orderedUuid()->toString();
-        Quotation::updateOrCreate(
-            ['id' => $id],
-            [
-                                'id' => $id,
-                'company_id' => $quotation->companyId,
-                'user_id' => $quotation->userId,
-                'nf_number' => $quotation->nfNumber,
-                'sender_cnpj' => $quotation->senderCnpj,
-                'receiver_cnpj' => $quotation->receiverCnpj,
-                'origin_cep' => $quotation->originCep,
-                'destination_cep' => $quotation->destinationCep,
-                'origin_city' => $quotation->originCity,
-                'destination_city' => $quotation->destinationCity,
-                'destination_state' => $quotation->destinationState,
-                'weight' => $quotation->weight,
-                'boxes' => $quotation->boxes,
-                'volume' => $quotation->volume,
-                'cargo_value' => $quotation->cargoValue,
-                'status' => $quotation->status,
-                'valid_until' => $quotation->validUntil,
-                'created_at' => $quotation->createdAt ?: now(),
-                'updated_at' => $quotation->updatedAt ?: now(),
-            ]
-        );
 
-        if (!empty($quotation->results)) {
-            DB::transaction(function () use ($id, $quotation) {
+        DB::transaction(function () use ($id, $quotation) {
+            Quotation::updateOrCreate(
+                ['id' => $id],
+                [
+                                    'id' => $id,
+                    'company_id' => $quotation->companyId,
+                    'user_id' => $quotation->userId,
+                    'nf_number' => $quotation->nfNumber,
+                    'sender_cnpj' => $quotation->senderCnpj,
+                    'receiver_cnpj' => $quotation->receiverCnpj,
+                    'origin_cep' => $quotation->originCep,
+                    'destination_cep' => $quotation->destinationCep,
+                    'origin_city' => $quotation->originCity,
+                    'destination_city' => $quotation->destinationCity,
+                    'destination_state' => $quotation->destinationState,
+                    'weight' => $quotation->weight,
+                    'boxes' => $quotation->boxes,
+                    'volume' => $quotation->volume,
+                    'cargo_value' => $quotation->cargoValue,
+                    'status' => $quotation->status,
+                    'valid_until' => $quotation->validUntil,
+                    'created_at' => $quotation->createdAt ?: now(),
+                    'updated_at' => $quotation->updatedAt ?: now(),
+                ]
+            );
+
+            if (!empty($quotation->results)) {
                 QuotationResult::where('quotation_id', $id)->delete();
 
                 foreach ($quotation->results as $result) {
@@ -90,8 +91,8 @@ class EloquentQuotationRepository implements QuotationRepository
                         'fees_breakdown' => $result['fees_breakdown'] ?? null,
                     ]);
                 }
-            });
-        }
+            }
+        });
     }
 
     private function toEntity(Quotation $model): QuotationEntity
