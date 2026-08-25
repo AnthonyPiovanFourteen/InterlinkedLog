@@ -17,6 +17,12 @@ done
 echo "MySQL disponível — rodando migrations"
 php artisan migrate --force
 
-php artisan db:seed --class=DatabaseSeeder --force || true
+SEEDED=$(php artisan tinker --execute="echo \App\Models\Company::count();" 2>/dev/null)
+if [ "${SEEDED:-0}" = "0" ]; then
+    echo "Banco vazio — aplicando seed inicial"
+    php artisan db:seed --class=DatabaseSeeder --force || true
+else
+    echo "Banco já populado ($SEEDED empresas) — seed ignorado"
+fi
 
 php artisan serve --host=0.0.0.0 --port=8000

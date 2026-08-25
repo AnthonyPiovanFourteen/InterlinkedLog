@@ -165,11 +165,10 @@ restaure periodicamente em `interlinkedlog_restore` e confira as contagens.
   Laravel 11.31 que o projeto depende tem advisories em aberto que bloqueiam
   o `composer install` por padrão. Para um projeto acadêmico tudo bem; em
   produção real, subir as deps para uma versão patcheada.
-- **Seed roda no boot do container e não é idempotente por design.** O
-  entrypoint roda `migrate --force && (app:seed || true) && serve` — o
-  `|| true` impede que uma falha de constraint UNIQUE no re-seed mate o
-  container. No MySQL isso duplica `companies` (sem constraint única) a cada
-  boot — use o seed apenas no setup inicial.
+- **Seed roda no boot apenas quando o banco está vazio.** O entrypoint
+  verifica se `companies` tem registros antes de semear; em banco populado o
+  seed é ignorado (não há duplicação de empresas no restart). A falha de
+  constraint UNIQUE no re-seed continua tolerada com `|| true`.
 - **Frontend usa Vite dev mode (não build).** Compilação on-demand: a
   primeira navegação para cada rota leva 1-3s. Pré-aqueça as rotas antes de
   uma demo ao vivo, clicando em cada item do menu uma vez.
