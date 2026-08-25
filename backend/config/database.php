@@ -16,7 +16,7 @@ return [
     |
     */
 
-    'default' => env('DB_CONNECTION', 'sqlite'),
+    'default' => env('DB_CONNECTION', 'mysql'),
 
     /*
     |--------------------------------------------------------------------------
@@ -32,6 +32,9 @@ return [
     'connections' => [
 
         'sqlite' => [
+            // Mantida apenas como utilitário do smoke test `test-all.sh`
+            // (build PHP local sem pdo_mysql). A aplicação e a suíte PHPUnit
+            // rodam em MySQL — default abaixo.
             'driver' => 'sqlite',
             'url' => env('DB_URL'),
             'database' => env('DB_DATABASE', database_path('database.sqlite')),

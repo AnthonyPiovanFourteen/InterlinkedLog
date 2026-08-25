@@ -57,7 +57,7 @@ class QuotationEngine implements QuotationEngineService
 
             $route = null;
             foreach ($table->routes as $r) {
-                if (strtolower($r['city']) === strtolower($quotation->destinationCity)) {
+                if (mb_strtolower($r['city']) === mb_strtolower($quotation->destinationCity)) {
                     $route = $r;
                     break;
                 }
