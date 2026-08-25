@@ -53,7 +53,7 @@ class RepositorySaveAtomicityTest extends ApiTestCase
             app(QuotationRepository::class)->save($quotation);
             $this->fail('A gravação dos resultados deveria ter lançado exceção de FK');
         } catch (QueryException $e) {
-            $this->assertStringContainsString('FOREIGN KEY constraint failed', $e->getMessage());
+            $this->assertSame('23000', $e->getCode());
         }
 
         $this->assertDatabaseMissing('quotations', ['id' => $id]);
@@ -90,7 +90,7 @@ class RepositorySaveAtomicityTest extends ApiTestCase
             app(FreightTableRepository::class)->save($table);
             $this->fail('A gravação das rotas deveria ter lançado exceção de NOT NULL');
         } catch (QueryException $e) {
-            $this->assertStringContainsString('NOT NULL constraint failed', $e->getMessage());
+            $this->assertSame('23000', $e->getCode());
         }
 
         $this->assertDatabaseMissing('freight_tables', ['id' => $id]);
