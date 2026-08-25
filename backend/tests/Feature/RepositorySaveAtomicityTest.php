@@ -81,8 +81,12 @@ class RepositorySaveAtomicityTest extends ApiTestCase
             validityStart: '2026-01-01',
             validityEnd: '2026-12-31',
             status: 'Ativa',
-            routes: [['city' => 'Londrina', 'state' => null, 'deadline' => 2]],
-            weightRanges: [['start' => 0, 'end' => 100, 'value' => 100]],
+            routes: [[
+                'city' => 'Londrina',
+                'state' => null,
+                'deadline' => 2,
+                'weightRanges' => [['start' => 0, 'end' => 100, 'value' => 100]],
+            ]],
             fees: [['type' => 'gris', 'value' => 10, 'percentage' => 0]],
         );
 

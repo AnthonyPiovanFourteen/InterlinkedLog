@@ -91,8 +91,8 @@ class EloquentFreightTableRepository implements FreightTableRepository
 
             if (!empty($table->routes)) {
                 FreightTableRoute::where('freight_table_id', $id)->delete();
+                FreightTableWeightRange::whereHas('route', fn($q) => $q->where('freight_table_id', $id))->delete();
 
-                $routeModels = [];
                 foreach ($table->routes as $idx => $route) {
                     $routeModel = FreightTableRoute::create([
                         'id' => Str::orderedUuid()->toString(),
@@ -102,24 +102,18 @@ class EloquentFreightTableRepository implements FreightTableRepository
                         'destination_city' => $route['city'],
                         'destination_uf' => $route['state'],
                     ]);
-                    $routeModels[] = $routeModel;
-                }
 
-                if (!empty($table->weightRanges)) {
-                    FreightTableWeightRange::whereHas('route', fn($q) => $q->where('freight_table_id', $id))->delete();
-
-                    foreach ($routeModels as $idx => $routeModel) {
-                        $deadline = $table->routes[$idx]['deadline'] ?? 1;
-                        foreach ($table->weightRanges as $wr) {
-                            FreightTableWeightRange::create([
-                                'id' => Str::orderedUuid()->toString(),
-                                'freight_table_route_id' => $routeModel->id,
-                                'min_weight' => $wr['start'],
-                                'max_weight' => $wr['end'],
-                                'freight_value' => $wr['value'],
-                                'deadline_days' => $deadline,
-                            ]);
-                        }
+                    $routeRanges = $route['weightRanges'] ?? [];
+                    foreach ($routeRanges as $wr) {
+                        $deadline = $wr['deadline'] ?? ($route['deadline'] ?? 1);
+                        FreightTableWeightRange::create([
+                            'id' => Str::orderedUuid()->toString(),
+                            'freight_table_route_id' => $routeModel->id,
+                            'min_weight' => $wr['start'],
+                            'max_weight' => $wr['end'],
+                            'freight_value' => $wr['value'],
+                            'deadline_days' => $deadline,
+                        ]);
                     }
                 }
             }
@@ -150,29 +144,22 @@ class EloquentFreightTableRepository implements FreightTableRepository
     private function toEntity(FreightTable $model): FreightTableEntity
     {
         $routes = $model->routes->map(function ($route) {
-            $deadline = 1;
-            $firstWr = $route->weightRanges->first();
-            if ($firstWr) {
-                $deadline = $firstWr->deadline_days;
-            }
-            return [
-                'city' => $route->destination_city,
-                'state' => $route->destination_uf,
-                'deadline' => $deadline,
-            ];
-        })->toArray();
-
-        $weightRanges = [];
-        if ($model->routes->isNotEmpty()) {
-            $firstRoute = $model->routes->first();
-            $weightRanges = $firstRoute->weightRanges->map(function ($wr) {
+            $weightRanges = $route->weightRanges->map(function ($wr) {
                 return [
                     'start' => (float) $wr->min_weight,
                     'end' => (float) $wr->max_weight,
                     'value' => (float) $wr->freight_value,
+                    'deadline' => (int) $wr->deadline_days,
                 ];
             })->toArray();
-        }
+
+            return [
+                'city' => $route->destination_city,
+                'state' => $route->destination_uf,
+                'deadline' => $weightRanges[0]['deadline'] ?? 1,
+                'weightRanges' => $weightRanges,
+            ];
+        })->toArray();
 
         $fees = $model->fees->map(function ($fee) {
             return [
@@ -192,7 +179,6 @@ class EloquentFreightTableRepository implements FreightTableRepository
             validityEnd: $model->valid_until,
             status: $model->status,
             routes: $routes,
-            weightRanges: $weightRanges,
             fees: $fees,
             createdAt: $model->created_at?->toIso8601String() ?? '',
             updatedAt: $model->updated_at?->toIso8601String() ?? '',

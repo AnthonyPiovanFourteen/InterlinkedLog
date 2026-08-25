@@ -65,10 +65,8 @@ class QuotationEngine implements QuotationEngineService
 
             if (!$route) continue;
 
-            $deadline = $route['deadline'];
-
             $weightRange = null;
-            foreach ($table->weightRanges as $w) {
+            foreach ($route['weightRanges'] as $w) {
                 if ($quotation->weight >= $w['start'] && $quotation->weight <= $w['end']) {
                     $weightRange = $w;
                     break;
@@ -76,6 +74,7 @@ class QuotationEngine implements QuotationEngineService
             }
 
             $freightValue = $weightRange ? $weightRange['value'] : 0;
+            $deadline = $weightRange ? $weightRange['deadline'] : ($route['deadline'] ?? 1);
 
             $totalFees = $this->calculateFees($table->fees, $quotation->cargoValue);
 
@@ -101,9 +100,10 @@ class QuotationEngine implements QuotationEngineService
     {
         $total = 0.0;
         foreach ($fees as $fee) {
-            $total += $fee['value'] ?? 0;
             if (!empty($fee['percentage'])) {
                 $total += $cargoValue * ($fee['percentage'] / 100);
+            } else {
+                $total += $fee['value'] ?? 0;
             }
         }
         return $total;
@@ -113,9 +113,10 @@ class QuotationEngine implements QuotationEngineService
     {
         $breakdown = [];
         foreach ($fees as $fee) {
-            $amount = ($fee['value'] ?? 0);
             if (!empty($fee['percentage'])) {
-                $amount += $cargoValue * ($fee['percentage'] / 100);
+                $amount = $cargoValue * ($fee['percentage'] / 100);
+            } else {
+                $amount = $fee['value'] ?? 0;
             }
             $breakdown[] = [
                 'type' => $fee['type'],

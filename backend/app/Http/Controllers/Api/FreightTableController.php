@@ -32,7 +32,7 @@ class FreightTableController extends Controller
             'validity_end' => $t->validityEnd,
             'status' => $t->status,
             'routes_count' => count($t->routes),
-            'weight_ranges_count' => count($t->weightRanges),
+            'weight_ranges_count' => count($t->routes[0]['weightRanges'] ?? []),
             'fees_count' => count($t->fees),
         ], $tables);
 
@@ -82,8 +82,10 @@ class FreightTableController extends Controller
             originCity: $table->originCity,
             validityStart: $table->validityStart, validityEnd: $table->validityEnd,
             status: $table->status,
-            routes: $request->input('routes', []),
-            weightRanges: $request->input('weight_ranges', []),
+            routes: array_map(
+                fn($r) => array_merge($r, ['weightRanges' => $request->input('weight_ranges', [])]),
+                $request->input('routes', []),
+            ),
             fees: $request->input('fees', []),
         );
 
@@ -105,7 +107,7 @@ class FreightTableController extends Controller
                 'validity_start' => $table->validityStart, 'validity_end' => $table->validityEnd,
                 'status' => $table->status,
                 'routes' => $table->routes,
-                'weight_ranges' => $table->weightRanges,
+                'weight_ranges' => $table->routes[0]['weightRanges'] ?? [],
                 'fees' => $table->fees,
             ],
         ]);
@@ -117,6 +119,17 @@ class FreightTableController extends Controller
         $table = $this->repository->findById($companyId, $id);
         if (!$table) return response()->json(['message' => 'Tabela não encontrada'], 404);
 
+        $weightRanges = $request->input('weight_ranges');
+        $routes = array_map(function ($r) use ($weightRanges, $table) {
+            if ($weightRanges !== null) {
+                return array_merge($r, ['weightRanges' => $weightRanges]);
+            }
+            if (isset($r['weightRanges'])) {
+                return $r;
+            }
+            return array_merge($r, ['weightRanges' => $table->routes[0]['weightRanges'] ?? []]);
+        }, $request->input('routes', $table->routes));
+
         $updated = new FreightTable(
             id: $table->id,
             companyId: $table->companyId,
@@ -126,8 +139,7 @@ class FreightTableController extends Controller
             validityStart: $request->input('validity_start', $table->validityStart),
             validityEnd: $request->input('validity_end', $table->validityEnd),
             status: $request->input('status', $table->status),
-            routes: $request->input('routes', $table->routes),
-            weightRanges: $request->input('weight_ranges', $table->weightRanges),
+            routes: $routes,
             fees: $request->input('fees', $table->fees),
             createdAt: $table->createdAt,
             updatedAt: now()->toIso8601String(),

@@ -14,7 +14,6 @@ class FreightTable
         public readonly string $validityEnd,
         public readonly string $status,
         public readonly array $routes,
-        public readonly array $weightRanges,
         public readonly array $fees,
         public readonly string $createdAt = '',
         public readonly string $updatedAt = '',
@@ -39,7 +38,6 @@ class FreightTable
             validityEnd: $validityEnd,
             status: 'Rascunho',
             routes: [],
-            weightRanges: [],
             fees: [],
         );
     }

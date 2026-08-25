@@ -146,9 +146,9 @@ Para rodar **fora do Docker**, use os templates `.env.example` e
 ## Persistência e backup
 
 O MySQL persiste no volume `mysql-data`. Não há backup automático — agende
-`./scripts/backup-mysql.sh` (dump com retenção) e consulte o procedimento de
-restauração em `DOC/OperationsRunbook.md`. Backup não verificado não é backup:
-restaure periodicamente em `interlinkedlog_restore` e confira as contagens.
+`./scripts/backup-mysql.sh` (dump com retenção) e restaure periodicamente em
+um banco separado conferindo as contagens por tabela. Backup não verificado
+não é backup.
 
 ## Decisões e gotchas
 
@@ -159,8 +159,7 @@ restaure periodicamente em `interlinkedlog_restore` e confira as contagens.
 - **Colação `utf8mb4_unicode_ci` é accent-insensitive** — o `LIKE` da camada
   SQL casa "Marilia" com "Marília", mas o `QuotationEngine` valida a rota em
   PHP (`mb_strtolower`), que não remove acentos: o resultado final da cotação
-  não casa acentos em nenhum banco (decisão pendente — ver
-  `DOC/ArchitecturalReview.md`).
+  não casa acentos em nenhum banco (decisão de negócio pendente).
 - **Composer security advisories desabilitadas no build do backend.** O
   Laravel 11.31 que o projeto depende tem advisories em aberto que bloqueiam
   o `composer install` por padrão. Para um projeto acadêmico tudo bem; em
