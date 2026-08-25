@@ -9,13 +9,14 @@ prazo e custo-benefício), gera contrato em PDF e acompanha o status da carga.
 | Camada | Tecnologia |
 |---|---|
 | Frontend | React 19 + TanStack Start + TanStack Router/Query + Vite + Tailwind + shadcn/ui + recharts + react-simple-maps |
-| Backend | Laravel 11 (PHP 8.4) + SQLite + dompdf |
+| Backend | Laravel 11 (PHP 8.4) + MySQL 8 + dompdf |
 | Autenticação | Token Bearer (gerado no login, persistido no localStorage) |
-| Empacotamento | Docker Compose (frontend + backend) |
+| Empacotamento | Docker Compose (mysql + frontend + backend) |
 
 ## Pré-requisitos
 
-Só **Docker Desktop**. Nada mais precisa estar instalado na máquina.
+Só **Docker Desktop** (ou Docker Engine + Compose). Nada mais precisa estar
+instalado na máquina.
 
 ## Como rodar
 
@@ -25,8 +26,8 @@ cd InterlinkedLog
 docker compose up --build -d
 ```
 
-Na primeira vez leva uns 2-3 minutos (baixa imagens, instala dependências,
-roda migrations e seed). Nas próximas é instantâneo.
+Na primeira vez leva alguns minutos (baixa imagens, instala dependências,
+inicializa o MySQL, roda migrations e seed). Nas próximas é mais rápido.
 
 Quando os containers estiverem prontos:
 
@@ -101,9 +102,11 @@ Pra suportar mais CEPs em produção, trocar por uma API tipo ViaCEP.
 ```
 .
 ├── Dockerfile              # Frontend (bun + vite dev server)
-├── docker-compose.yml      # Orquestra frontend + backend
+├── docker-compose.yml      # Orquestra mysql + frontend + backend
 ├── docker-start.sh         # Atalho para docker compose up --build -d
 ├── docker-stop.sh          # Atalho para docker compose down
+├── mysql-init/init.sql     # Cria interlinkedlog_test na 1ª subida do MySQL
+├── scripts/                # backup-mysql.sh, restore-mysql.sh
 ├── src/
 │   ├── routes/             # Páginas (TanStack Router file-based)
 │   ├── lib/api.ts          # Cliente HTTP do frontend
@@ -111,60 +114,70 @@ Pra suportar mais CEPs em produção, trocar por uma API tipo ViaCEP.
 ├── public/
 │   └── brazil-topo.json    # Mapa do Brasil usado no dashboard
 └── backend/
-    ├── Dockerfile          # Backend (php-cli + composer + sqlite)
+    ├── Dockerfile          # Backend (php-cli + composer + pdo_mysql)
+    ├── docker-entrypoint.sh# Espera o MySQL e roda migrate + seed + serve
     ├── app/
     │   ├── Console/Commands/SeedCommand.php   # `php artisan app:seed`
     │   ├── Domain/         # Entidades + repositórios + services (DDD)
     │   ├── Infrastructure/Services/QuotationEngine.php  # Motor de cotação
     │   └── Http/Controllers/Api/              # Controllers REST
     ├── database/
-    │   ├── migrations/     # Schema SQLite
+    │   ├── migrations/     # Schema MySQL
     │   ├── seeders/        # Dados iniciais (admin + transportadoras + tabelas)
-    │   └── database.sqlite # Criado em runtime; persistido no volume Docker
+    │   └── scripts/        # migrate-sqlite-to-mysql.php (migração legada)
     └── routes/api.php      # Definição de rotas REST
 ```
 
 ## Configuração
 
-Não precisa criar nenhum `.env` para rodar via Docker.
+Não precisa criar nenhum `.env` para rodar via Docker — toda a configuração
+vem de variáveis de ambiente injetadas pelo `docker-compose.yml` (o backend
+**não** gera `.env` na imagem). Defaults de dev para credenciais do MySQL,
+`APP_KEY`, `APP_ENV=production` e `APP_DEBUG=false` podem ser sobrescritos
+criando um `.env` na raiz (ver `.env.example`).
 
-- O **backend** gera o `.env` no build (ver `backend/Dockerfile`) e roda
-  `php artisan key:generate --force` automaticamente. Cache, sessão e fila
-  estão em modo `file`/`sync` porque as migrations não criam as tabelas
-  correspondentes — não trocar para `database` sem antes adicionar essas
-  migrations.
-- O **frontend** recebe `VITE_API_URL=http://backend:8000` direto do
-  `docker-compose.yml`. Esse hostname só resolve dentro da rede do compose.
+Cache, sessão e fila seguem em `file`/`sync` — não trocar para `database`
+sem antes adicionar as migrations correspondentes.
 
-Para rodar **fora do Docker** (PHP/bun nativos), use os templates
-`.env.example` e `backend/.env.example` como ponto de partida.
+Para rodar **fora do Docker**, use os templates `.env.example` e
+`backend/.env.example` como ponto de partida (o backend exige PHP com
+`pdo_mysql`).
 
-## Persistência
+## Persistência e backup
 
-O volume `backend-data` é montado em `/app/database` dentro do container do
-backend. Isso inclui o `database.sqlite` (com todos os dados), mas também as
-pastas `migrations/`, `seeders/` e `factories/` — em runs subsequentes elas
-ficam pinned na versão da primeira build. Se você alterar migrations ou
-seeders depois disso, rode `docker compose down -v && docker compose up
---build -d` para resetar o volume e forçar o re-seed.
+O MySQL persiste no volume `mysql-data`. Não há backup automático — agende
+`./scripts/backup-mysql.sh` (dump com retenção) e consulte o procedimento de
+restauração em `DOC/OperationsRunbook.md`. Backup não verificado não é backup:
+restaure periodicamente em `interlinkedlog_restore` e confira as contagens.
 
 ## Decisões e gotchas
 
+- **Tenancy por Global Scope.** `FreightTable`, `Contract`, `Quotation`,
+  `User`, `AuditLog` e `SystemLog` são filtrados por `company_id` lido do
+  request HTTP. Em workers de fila o escopo fica inerte — manter
+  `QUEUE_CONNECTION=sync` ou carregar `company_id` no payload do job.
+- **Colação `utf8mb4_unicode_ci` é accent-insensitive** — o `LIKE` da camada
+  SQL casa "Marilia" com "Marília", mas o `QuotationEngine` valida a rota em
+  PHP (`mb_strtolower`), que não remove acentos: o resultado final da cotação
+  não casa acentos em nenhum banco (decisão pendente — ver
+  `DOC/ArchitecturalReview.md`).
 - **Composer security advisories desabilitadas no build do backend.** O
   Laravel 11.31 que o projeto depende tem advisories em aberto que bloqueiam
   o `composer install` por padrão. Para um projeto acadêmico tudo bem; em
   produção real, subir as deps para uma versão patcheada.
-- **Seed roda no boot do container e é idempotente por tolerância (não por
-  design).** O CMD do backend é
-  `migrate --force && (app:seed || true) && serve` — o `|| true` impede que
-  uma falha de constraint UNIQUE no re-seed mate o container.
+- **Seed roda no boot do container e não é idempotente por design.** O
+  entrypoint roda `migrate --force && (app:seed || true) && serve` — o
+  `|| true` impede que uma falha de constraint UNIQUE no re-seed mate o
+  container. No MySQL isso duplica `companies` (sem constraint única) a cada
+  boot — use o seed apenas no setup inicial.
 - **Frontend usa Vite dev mode (não build).** Compilação on-demand: a
   primeira navegação para cada rota leva 1-3s. Pré-aqueça as rotas antes de
   uma demo ao vivo, clicando em cada item do menu uma vez.
 - **CORS aberto (`*`) no backend.** OK para dev; trancar antes de qualquer
   exposição pública.
-- **APP_DEBUG=true por padrão.** Stack traces vazam em erro 500 — desligar
-  antes de subir pra produção.
+- **`APP_DEBUG=false` e `APP_ENV=production` por padrão** no compose;
+  sobrescreva com `APP_DEBUG=true`/`APP_ENV=local` no `.env` da raiz para
+  desenvolvimento.
 
 ## Próximos passos
 
@@ -173,6 +186,4 @@ seeders depois disso, rode `docker compose down -v && docker compose up
       drivers `database`.
 - [ ] Build de produção do frontend (`vite build` + servir estático) ao invés
       de dev server no container.
-- [ ] Testes automatizados (PHPUnit / Vitest) — esqueleto já está no
-      `phpunit.xml`.
-- [ ] Pipeline CI (lint + testes) no GitHub Actions.
+- [ ] Pipeline CI (lint + testes PHPUnit contra MySQL) no GitHub Actions.

@@ -3,10 +3,16 @@
 BASE="http://127.0.0.1:8000/api/v1"
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# O smoke test usa o build PHP com pdo_sqlite (sem pdo_mysql) e um banco
+# SQLite descartável — a aplicação e a suíte PHPUnit rodam em MySQL.
+export DB_CONNECTION=sqlite
+export DB_DATABASE=database/database.sqlite
+
 echo "=== Starting backend server ==="
 kill $(lsof -ti:8000) 2>/dev/null || true
 sleep 1
 cd "$DIR/backend"
+touch database/database.sqlite
 setsid /home/anthonypiovan/.php-ext/php-sqlite artisan migrate:fresh --force > /dev/null 2>&1
 setsid /home/anthonypiovan/.php-ext/php-sqlite artisan app:seed > /dev/null 2>&1
 setsid /home/anthonypiovan/.php-ext/php-sqlite -d opcache.enable=0 -S 127.0.0.1:8000 -t public > "$DIR/logs/backend.log" 2>&1 &

@@ -17,6 +17,6 @@ done
 echo "MySQL disponível — rodando migrations"
 php artisan migrate --force
 
-php artisan app:seed || true
+php artisan db:seed --class=DatabaseSeeder --force || true
 
 php artisan serve --host=0.0.0.0 --port=8000
