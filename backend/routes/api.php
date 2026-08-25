@@ -15,10 +15,9 @@ use App\Http\Controllers\Api\SystemLogController;
 
 Route::prefix('v1')->group(function () {
 
-    Route::post('login', [AuthController::class, 'login']);
-    Route::post('register', [AuthController::class, 'register']);
+    Route::post('login', [AuthController::class, 'login'])->middleware('throttle:login');
 
-    Route::middleware(['auth.token', 'tenant'])->group(function () {
+    Route::middleware(['auth.token', 'tenant', 'throttle:api'])->group(function () {
         Route::post('logout', [AuthController::class, 'logout']);
         Route::get('me', [AuthController::class, 'me']);
 

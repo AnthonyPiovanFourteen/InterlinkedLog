@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -19,6 +20,7 @@ abstract class ApiTestCase extends TestCase
     {
         parent::setUp();
         $this->app->instance('request', \Illuminate\Http\Request::create('/'));
+        Cache::flush();
         $this->seed();
 
         $login = $this->postJson('/api/v1/login', [
