@@ -47,8 +47,15 @@ class TrackingController extends Controller
         return response()->json(['data' => $data]);
     }
 
-    public function show(string $contractId): JsonResponse
+    public function show(Request $request, string $contractId): JsonResponse
     {
+        $companyId = $request->attributes->get('company_id');
+        $contract = $this->contractRepository->findById($contractId);
+
+        if (!$contract || $contract->companyId !== $companyId) {
+            return response()->json(['message' => 'Contratação não encontrada'], 404);
+        }
+
         $events = $this->trackingRepository->findByContract($contractId);
 
         $data = array_map(fn(TrackingEvent $e) => [
