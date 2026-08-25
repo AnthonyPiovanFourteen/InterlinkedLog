@@ -1,6 +1,9 @@
-node_modules
-.git
-.gitignore
 vendor
-storage/data/*.json
-tests
+node_modules
+.env
+.env.*
+!.env.example
+database/*.sqlite
+database/*.sqlite-journal
+storage/logs/*.log
+storage/framework/cache/data/*

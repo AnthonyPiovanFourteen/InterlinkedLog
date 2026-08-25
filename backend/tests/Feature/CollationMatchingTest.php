@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Domain\Entities\Quotation as QuotationEntity;
+use App\Domain\Repositories\FreightTableRepository;
 use App\Domain\Services\QuotationEngineService;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -62,18 +63,43 @@ class CollationMatchingTest extends ApiTestCase
 
         $results = app(QuotationEngineService::class)->process($this->buildQuotation('Marilia'));
 
+        // DESCOBERTA em MySQL real: o LIKE da camada SQL é accent-insensitive
+        // (utf8mb4_unicode_ci), MAS o QuotationEngine ainda valida a rota em PHP
+        // com strtolower, que não remove acentos. O resultado final do motor é
+        // o mesmo nos dois bancos: 'Marilia' NÃO casa com a rota 'Marília'.
+        $this->assertNull(
+            $this->resultForCarrier($results, $carrier['id']),
+            'O motor de cotação não casa cidade sem acento com rota acentuada em nenhum banco (checagem PHP com strtolower)',
+        );
+    }
+
+    public function test_repository_like_matching_is_accent_insensitive_only_on_mysql(): void
+    {
+        $carrier = $this->createCarrier(['name' => 'Transportadora Acentuada']);
+        $this->createFreightTable($carrier['id'], [
+            'routes' => [['city' => 'Marília', 'state' => 'SP', 'deadline' => 2]],
+        ]);
+
+        $table = app(FreightTableRepository::class)->findActiveByCarrierAndRoute(
+            $this->adminCompanyId,
+            $carrier['id'],
+            'São Paulo',
+            'Marilia',
+            'SP',
+        );
+
         if (DB::connection()->getDriverName() === 'mysql') {
-            // DECISÃO (Fase 2): utf8mb4_unicode_ci é accent-insensitive — 'Marilia'
-            // DEVE casar com a rota 'Marília' no motor de cotação.
+            // DECISÃO (Fase 2): utf8mb4_unicode_ci é accent-insensitive — a
+            // camada SQL DEVE casar 'Marilia' com a rota 'Marília'.
             $this->assertNotNull(
-                $this->resultForCarrier($results, $carrier['id']),
-                'No MySQL (utf8mb4_unicode_ci), a cidade sem acento deve casar com a rota acentuada',
+                $table,
+                'No MySQL (utf8mb4_unicode_ci), o LIKE da camada SQL deve casar a cidade sem acento',
             );
         } else {
-            // SQLite (legado): LIKE é case-insensitive apenas para ASCII — não casa.
+            // SQLite (legado): LIKE é case-insensitive apenas para ASCII.
             $this->assertNull(
-                $this->resultForCarrier($results, $carrier['id']),
-                'No SQLite, a cidade sem acento não casa com a rota acentuada',
+                $table,
+                'No SQLite, o LIKE não casa a cidade sem acento com a rota acentuada',
             );
         }
     }

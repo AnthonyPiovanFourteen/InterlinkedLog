@@ -19,7 +19,6 @@ return new class extends Migration
         'quotation_results',
         'contracts',
         'tracking_events',
-        'system_logs',
     ];
 
     public function up(): void
@@ -31,9 +30,11 @@ return new class extends Migration
             });
         }
 
-        Schema::table('audit_logs', function (Blueprint $t) {
-            $t->datetime('created_at')->nullable()->change();
-        });
+        foreach (['audit_logs', 'system_logs'] as $table) {
+            Schema::table($table, function (Blueprint $t) {
+                $t->datetime('created_at')->nullable()->change();
+            });
+        }
 
         Schema::table('users', function (Blueprint $t) {
             $t->datetime('last_access_at')->nullable()->change();
@@ -53,9 +54,11 @@ return new class extends Migration
             });
         }
 
-        Schema::table('audit_logs', function (Blueprint $t) {
-            $t->timestamp('created_at')->nullable()->change();
-        });
+        foreach (['audit_logs', 'system_logs'] as $table) {
+            Schema::table($table, function (Blueprint $t) {
+                $t->timestamp('created_at')->nullable()->change();
+            });
+        }
 
         Schema::table('users', function (Blueprint $t) {
             $t->timestamp('last_access_at')->nullable()->change();

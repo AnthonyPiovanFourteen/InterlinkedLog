@@ -44,6 +44,7 @@ backend/.env.*
 *.sqlite3
 database/database.sqlite
 backend/database/database.sqlite
+backups/
 
 # ══════════════════════════════════════════════
 # Cache
