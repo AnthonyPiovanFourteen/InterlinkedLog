@@ -98,6 +98,10 @@ class QuotationEngine implements QuotationEngineService
 
     private function calculateFees(array $fees, float $cargoValue): float
     {
+        // frete_minimo e cubagem são tratados como taxas fixas (R$ 50,00 e
+        // R$ 300,00 no seed — cerca de metade do total de taxas). A semântica
+        // provável é, respectivamente, piso sobre o valor do frete e fator de
+        // cubagem sobre o peso. Aguarda decisão de negócio; não alterar o cálculo.
         $total = 0.0;
         foreach ($fees as $fee) {
             if (!empty($fee['percentage'])) {
