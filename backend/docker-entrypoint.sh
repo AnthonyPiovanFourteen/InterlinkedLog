@@ -1,6 +1,15 @@
 #!/bin/sh
 set -e
 
+APP_KEY_PUBLIC_DEV="base64:RznMgFB/a8l7NtPJYyrrQ9P6/YyWUfLFZ9BKjyyHZR8="
+
+if [ "$APP_ENV" = "production" ] && { [ -z "$APP_KEY" ] || [ "$APP_KEY" = "$APP_KEY_PUBLIC_DEV" ]; }; then
+    echo "ERRO: APP_ENV=production exige APP_KEY própria no ambiente." >&2
+    echo "O default do docker-compose é público e serve apenas para desenvolvimento." >&2
+    echo "Gere uma chave com: php -r \"echo 'base64:' . base64_encode(random_bytes(32)) . PHP_EOL;\"" >&2
+    exit 1
+fi
+
 MAX_ATTEMPTS=30
 attempt=0
 

@@ -133,8 +133,8 @@ Pra suportar mais CEPs em produção, trocar por uma API tipo ViaCEP.
 Não precisa criar nenhum `.env` para rodar via Docker — toda a configuração
 vem de variáveis de ambiente injetadas pelo `docker-compose.yml` (o backend
 **não** gera `.env` na imagem). Defaults de dev para credenciais do MySQL,
-`APP_KEY`, `APP_ENV=production` e `APP_DEBUG=false` podem ser sobrescritos
-criando um `.env` na raiz (ver `.env.example`).
+`APP_ENV=production` e `APP_DEBUG=false` podem ser sobrescritos criando um
+`.env` na raiz (ver `.env.example`).
 
 Cache, sessão e fila seguem em `file`/`sync` — não trocar para `database`
 sem antes adicionar as migrations correspondentes.
@@ -142,6 +142,23 @@ sem antes adicionar as migrations correspondentes.
 Para rodar **fora do Docker**, use os templates `.env.example` e
 `backend/.env.example` como ponto de partida (o backend exige PHP com
 `pdo_mysql`).
+
+### Chave da aplicação em produção
+
+O `docker-compose.yml` traz um `APP_KEY` **default público** (apenas para
+desenvolvimento). Com `APP_ENV=production`, o boot do backend **aborta** se
+esse default estiver em uso — a chave precisa ser definida no ambiente:
+
+```bash
+# gere uma chave
+php -r "echo 'base64:' . base64_encode(random_bytes(32)) . PHP_EOL;"
+
+# no .env da raiz (gitignored):
+# APP_KEY=base64:<chave gerada>
+```
+
+Sem isso, a stack em produção não sobe (mensagem clara no log do container).
+Em desenvolvimento (`APP_ENV=local`), o default público é aceito.
 
 ## Persistência e backup
 
@@ -173,6 +190,13 @@ não é backup.
   uma demo ao vivo, clicando em cada item do menu uma vez.
 - **CORS aberto (`*`) no backend.** OK para dev; trancar antes de qualquer
   exposição pública.
+- **Token de sessão em `localStorage` (decisão adiada).** Qualquer XSS
+  exfiltra a sessão. Migrar para cookie `httpOnly` + `SameSite` exige
+  mudança coordenada de backend e frontend (emissão do cookie no login,
+  esquema CSRF — o cookie `httpOnly` não é legível por JS — e remoção do
+  `localStorage` no cliente), com risco de implementar pela metade (dupla
+  fonte de verdade ou `SameSite` incorreto). Adiado até existir demanda
+  explícita; o risco assumido é o vazamento de sessão via XSS.
 - **`APP_DEBUG=false` e `APP_ENV=production` por padrão** no compose;
   sobrescreva com `APP_DEBUG=true`/`APP_ENV=local` no `.env` da raiz para
   desenvolvimento.
