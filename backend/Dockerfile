@@ -1,4 +1,4 @@
-FROM php:8.4-cli-alpine
+FROM php:8.4-cli-alpine AS base
 
 RUN apk add --no-cache sqlite-dev curl \
     && docker-php-ext-install pdo pdo_sqlite pdo_mysql
@@ -18,3 +18,7 @@ RUN chmod +x docker-entrypoint.sh
 EXPOSE 8000
 
 CMD ["sh", "docker-entrypoint.sh"]
+
+FROM base AS dev
+
+RUN composer install --no-interaction --optimize-autoloader
