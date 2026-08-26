@@ -183,6 +183,20 @@ quando algo regredir — em especial, se o IP fixo do frontend
 isolamento falha (o throttle volta a ser global). Idempotente: zera os
 contadores de throttle no início, preservando os tokens de sessão.
 
+## Testes
+
+```bash
+docker compose up -d
+docker compose run --rm test            # suíte PHPUnit contra interlinkedlog_test
+./test-all.sh                           # smoke test HTTP local (usa o build PHP sqlite próprio)
+```
+
+O serviço `test` (profile `test`, não sobe com `up -d`) usa a imagem com
+dependências de desenvolvimento e **monta o código do working tree como
+volume** (`./backend:/app`) — testes novos são executados sem rebuild manual.
+No host, `php artisan test` exige PHP com `pdo_mysql` (não é o caso do
+ambiente atual).
+
 ## Cotações e CEP
 
 O CEP é resolvido primeiro pelo mapa local (22 prefixos, sem rede) e, fora

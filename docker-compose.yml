@@ -52,6 +52,8 @@ services:
       context: ./backend
       target: dev
     profiles: ["test"]
+    volumes:
+      - ./backend:/app
     environment:
       APP_ENV: testing
       APP_KEY: ${APP_KEY:-base64:RznMgFB/a8l7NtPJYyrrQ9P6/YyWUfLFZ9BKjyyHZR8=}
