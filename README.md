@@ -197,6 +197,15 @@ não é backup.
   `localStorage` no cliente), com risco de implementar pela metade (dupla
   fonte de verdade ou `SameSite` incorreto). Adiado até existir demanda
   explícita; o risco assumido é o vazamento de sessão via XSS.
+- **`TrustProxies` não configurado (decisão documentada).** O arranjo de
+  produção é nginx → php-fpm via FastCGI, que **não injeta**
+  `X-Forwarded-For`: o `REMOTE_ADDR` recebido pelo PHP já é o IP do cliente,
+  então `$request->ip()` e o rate limiting por IP (Fase B) funcionam sem
+  confiar em headers. Configurar `trustProxies` aqui abriria a porta para
+  `X-Forwarded-For` forjado (o cliente escaparia do throttle). Se um
+  proxy/LB externo entrar no caminho, configurar a faixa dele no
+  `trustProxies` passa a ser obrigatório — antes disso, verificar
+  `real_ip`/`proxy_protocol` no nginx.
 - **`APP_DEBUG=false` e `APP_ENV=production` por padrão** no compose;
   sobrescreva com `APP_DEBUG=true`/`APP_ENV=local` no `.env` da raiz para
   desenvolvimento.
