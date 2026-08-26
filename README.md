@@ -200,7 +200,17 @@ entrada inválida do usuário; 503 é indisponibilidade de infraestrutura.
 - **Colação `utf8mb4_unicode_ci` é accent-insensitive** — o `LIKE` da camada
   SQL casa "Marilia" com "Marília", mas o `QuotationEngine` valida a rota em
   PHP (`mb_strtolower`), que não remove acentos: o resultado final da cotação
-  não casa acentos em nenhum banco (decisão de negócio pendente).
+  não casa acentos em nenhum banco.
+  **Pergunta ao mantenedor (decisão de negócio pendente):** normalizar
+  acentos na comparação do engine. A resolução de CEP por ViaCEP (Fase D)
+  **ampliou a superfície deste problema**: antes, CEP fora do mapa virava
+  "São Paulo" (preço errado, mas com resultado); agora, mais CEPs resolvem
+  para a cidade canônica acentuada — se a tabela de frete veio de planilha
+  sem acento (`routes[].city` é entrada livre, há `.xlsx` em `examples/`),
+  a transportadora é silenciosamente pulada e a cotação volta vazia.
+  Trocou-se "preço errado silencioso" por "sem resultado silencioso": é
+  melhor (não gera contrato errado), mas a normalização deixou de ser
+  ergonomia e virou correção de um caminho que a D.1 tornou mais provável.
 - **Composer security advisories desabilitadas no build do backend.** O
   Laravel 11.31 que o projeto depende tem advisories em aberto que bloqueiam
   o `composer install` por padrão. Para um projeto acadêmico tudo bem; em
