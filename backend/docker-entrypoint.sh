@@ -34,4 +34,6 @@ else
     echo "Banco já populado ($SEEDED empresas) — seed ignorado"
 fi
 
-php artisan serve --host=0.0.0.0 --port=8000
+echo "Iniciando php-fpm e nginx"
+php-fpm -D
+nginx -g "daemon off;"
