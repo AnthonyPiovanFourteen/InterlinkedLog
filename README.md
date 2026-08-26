@@ -193,9 +193,12 @@ docker compose run --rm test            # suíte PHPUnit contra interlinkedlog_t
 
 O serviço `test` (profile `test`, não sobe com `up -d`) usa a imagem com
 dependências de desenvolvimento e **monta o código do working tree como
-volume** (`./backend:/app`) — testes novos são executados sem rebuild manual.
-No host, `php artisan test` exige PHP com `pdo_mysql` (não é o caso do
-ambiente atual).
+volume** (`./backend:/app`) com um volume anônimo em `/app/vendor` — o
+`vendor/` da imagem prevalece (a suíte funciona mesmo sem `vendor/` no
+host). Efeito colateral conhecido do Docker: se `backend/vendor` não
+existir no host, o primeiro `run` cria o diretório vazio (root) — para
+rodar `composer install` no host depois, remova com `rmdir
+backend/vendor`.
 
 ## Cotações e CEP
 

@@ -54,6 +54,7 @@ services:
     profiles: ["test"]
     volumes:
       - ./backend:/app
+      - /app/vendor
     environment:
       APP_ENV: testing
       APP_KEY: ${APP_KEY:-base64:RznMgFB/a8l7NtPJYyrrQ9P6/YyWUfLFZ9BKjyyHZR8=}
