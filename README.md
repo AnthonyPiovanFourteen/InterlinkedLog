@@ -167,6 +167,30 @@ O MySQL persiste no volume `mysql-data`. Não há backup automático — agende
 um banco separado conferindo as contagens por tabela. Backup não verificado
 não é backup.
 
+## Checagem de integração (rede/proxy)
+
+```bash
+docker compose up -d
+./scripts/integration-check.sh
+```
+
+Rode **antes de deploy** e **após mexer em rede, proxy ou `trustProxies`**.
+Cobre: E2E (login → cotação → contratação via `:3000`), isolamento do
+throttle de login por cliente (duas origens distintas via frontend) e
+bloqueio de `X-Forwarded-For` forjado em requisição direta. Exit code ≠ 0
+quando algo regredir — em especial, se o IP fixo do frontend
+(`172.28.0.10`) deixar de ser confiado pelo `trustProxies`, o teste de
+isolamento falha (o throttle volta a ser global). Idempotente: zera os
+contadores de throttle no início, preservando os tokens de sessão.
+
+## Cotações e CEP
+
+O CEP é resolvido primeiro pelo mapa local (22 prefixos, sem rede) e, fora
+dele, pelo ViaCEP com timeout de 5s e cache de 30 dias no banco. CEP não
+encontrado → **422** com o CEP na mensagem (nunca um "São Paulo" silencioso);
+serviço de CEP indisponível → **503** explícito. Status escolhidos: 422 é
+entrada inválida do usuário; 503 é indisponibilidade de infraestrutura.
+
 ## Decisões e gotchas
 
 - **Tenancy por Global Scope.** `FreightTable`, `Contract`, `Quotation`,
