@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Entities\Quotation;
+use App\Domain\Exceptions\CepLookupUnavailableException;
+use App\Domain\Exceptions\CepNotFoundException;
 use App\Domain\Repositories\QuotationRepository;
 use App\Domain\Services\QuotationEngineService;
 use Illuminate\Http\JsonResponse;
@@ -66,8 +68,14 @@ class QuotationController extends Controller
         $companyId = $request->attributes->get('company_id');
         $userId = $request->attributes->get('user_id');
 
-        $originCity = $this->engine->cepToCity($request->input('origin_cep'));
-        $destCity = $this->engine->cepToCity($request->input('destination_cep'));
+        try {
+            $originCity = $this->engine->cepToCity($request->input('origin_cep'));
+            $destCity = $this->engine->cepToCity($request->input('destination_cep'));
+        } catch (CepNotFoundException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (CepLookupUnavailableException $e) {
+            return response()->json(['message' => $e->getMessage()], 503);
+        }
 
         $quotation = Quotation::create(
             id: Str::orderedUuid()->toString(),

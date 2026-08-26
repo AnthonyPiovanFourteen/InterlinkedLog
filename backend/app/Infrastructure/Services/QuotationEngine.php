@@ -4,37 +4,27 @@ namespace App\Infrastructure\Services;
 
 use App\Domain\Entities\CarrierStatus;
 use App\Domain\Entities\Quotation;
+use App\Domain\Exceptions\CepNotFoundException;
 use App\Domain\Repositories\CarrierRepository;
 use App\Domain\Repositories\FreightTableRepository;
+use App\Domain\Services\CepLookupService;
 use App\Domain\Services\QuotationEngineService;
 
 class QuotationEngine implements QuotationEngineService
 {
-    private array $cepMap = [
-        '01000' => ['São Paulo', 'SP'], '02000' => ['São Paulo', 'SP'],
-        '20000' => ['Rio de Janeiro', 'RJ'], '21000' => ['Rio de Janeiro', 'RJ'],
-        '30000' => ['Belo Horizonte', 'MG'], '31000' => ['Belo Horizonte', 'MG'],
-        '40000' => ['Salvador', 'BA'], '41000' => ['Salvador', 'BA'],
-        '50000' => ['Recife', 'PE'], '51000' => ['Recife', 'PE'],
-        '60000' => ['Fortaleza', 'CE'], '61000' => ['Fortaleza', 'CE'],
-        '70000' => ['Brasília', 'DF'], '71000' => ['Brasília', 'DF'],
-        '80000' => ['Curitiba', 'PR'], '81000' => ['Curitiba', 'PR'],
-        '90000' => ['Porto Alegre', 'RS'], '91000' => ['Porto Alegre', 'RS'],
-        '74000' => ['Goiânia', 'GO'], '69000' => ['Manaus', 'AM'],
-        '17500' => ['Marília', 'SP'],
-        '86020' => ['Londrina', 'PR'],
-    ];
-
     public function __construct(
         private CarrierRepository $carrierRepository,
         private FreightTableRepository $freightTableRepository,
+        private CepLookupService $cepLookupService,
     ) {}
 
     public function cepToCity(string $cep): array
     {
-        $cep = preg_replace('/\D/', '', $cep);
-        $prefix = substr($cep, 0, 5);
-        return $this->cepMap[$prefix] ?? ['São Paulo', 'SP'];
+        $city = $this->cepLookupService->lookup($cep);
+        if (!$city) {
+            throw new CepNotFoundException($cep);
+        }
+        return $city;
     }
 
     public function process(Quotation $quotation): array

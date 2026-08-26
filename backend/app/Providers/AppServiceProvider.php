@@ -12,6 +12,7 @@ use App\Domain\Repositories\SystemLogRepository;
 use App\Domain\Repositories\TrackingEventRepository;
 use App\Domain\Repositories\UserRepository;
 use App\Domain\Services\AuthService;
+use App\Domain\Services\CepLookupService;
 use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
 use App\Infrastructure\Repositories\Eloquent\EloquentAuditLogRepository;
@@ -26,6 +27,7 @@ use App\Infrastructure\Repositories\Eloquent\EloquentUserRepository;
 use App\Infrastructure\Services\QuotationEngine;
 use App\Infrastructure\Services\ReportGenerator;
 use App\Infrastructure\Services\TokenAuthService;
+use App\Infrastructure\Services\ViaCepLookupService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -46,6 +48,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SystemLogRepository::class, EloquentSystemLogRepository::class);
         $this->app->singleton(AuthService::class, TokenAuthService::class);
         $this->app->singleton(QuotationEngineService::class, QuotationEngine::class);
+        $this->app->singleton(CepLookupService::class, ViaCepLookupService::class);
         $this->app->singleton(ReportService::class, ReportGenerator::class);
     }
 
