@@ -63,6 +63,66 @@ class SecurityFlowTest extends TestCase
         Cache::flush();
     }
 
+    public function test_throttle_via_trusted_proxy_is_per_client(): void
+    {
+        $this->seed();
+        Cache::flush();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->withServerVariables([
+                'REMOTE_ADDR' => '172.28.0.10',
+                'HTTP_X_FORWARDED_FOR' => '10.0.0.1',
+            ])->postJson('/api/v1/login', [
+                'email' => 'admin@interlinked.io',
+                'password' => 'senha-errada',
+            ])->assertStatus(401);
+        }
+
+        $this->withServerVariables([
+            'REMOTE_ADDR' => '172.28.0.10',
+            'HTTP_X_FORWARDED_FOR' => '10.0.0.1',
+        ])->postJson('/api/v1/login', [
+            'email' => 'admin@interlinked.io',
+            'password' => 'senha-errada',
+        ])->assertStatus(429);
+
+        $this->withServerVariables([
+            'REMOTE_ADDR' => '172.28.0.10',
+            'HTTP_X_FORWARDED_FOR' => '10.0.0.2',
+        ])->postJson('/api/v1/login', [
+            'email' => 'admin@interlinked.io',
+            'password' => 'admin123',
+        ])->assertOk();
+
+        Cache::flush();
+    }
+
+    public function test_forged_forwarded_header_on_direct_request_does_not_escape_throttle(): void
+    {
+        $this->seed();
+        Cache::flush();
+
+        for ($i = 0; $i < 5; $i++) {
+            $this->withServerVariables([
+                'REMOTE_ADDR' => '10.9.9.9',
+                'HTTP_X_FORWARDED_FOR' => '1.1.1.' . ($i + 1),
+            ])->postJson('/api/v1/login', [
+                'email' => 'admin@interlinked.io',
+                'password' => 'senha-errada',
+            ])->assertStatus(401);
+        }
+
+        $this->withServerVariables([
+            'REMOTE_ADDR' => '10.9.9.9',
+            'HTTP_X_FORWARDED_FOR' => '1.1.1.250',
+        ])->postJson('/api/v1/login', [
+            'email' => 'admin@interlinked.io',
+            'password' => 'senha-errada',
+        ])->assertStatus(429);
+
+        Cache::flush();
+    }
+
     public function test_login_is_rate_limited_after_five_attempts(): void
     {
         $this->seed();

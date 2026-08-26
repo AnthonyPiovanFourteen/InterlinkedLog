@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
         ]);
         $middleware->prepend(\App\Http\Middleware\ForceJsonResponse::class);
+        // Único proxy confiado: o container do frontend (IP fixo na rede
+        // docker, ver docker-compose.yml). O nginx->php-fpm via FastCGI não
+        // injeta X-Forwarded-For; confiar em qualquer outra origem permitiria
+        // forjar o IP e escapar do rate limiting.
+        $middleware->trustProxies(at: ['172.28.0.10']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {

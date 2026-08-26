@@ -32,7 +32,7 @@ inicializa o MySQL, roda migrations e seed). Nas próximas é mais rápido.
 Quando os containers estiverem prontos:
 
 - **Frontend:** http://localhost:3000
-- **API:** http://localhost:8080/api/v1
+- **API (via frontend):** http://localhost:3000/api/v1 — o backend não expõe porta pública
 - **Login:** `admin@interlinked.io` / `admin123`
 
 ## Comandos úteis
