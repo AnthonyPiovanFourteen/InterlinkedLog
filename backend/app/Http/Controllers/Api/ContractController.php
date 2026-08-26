@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Application\UseCases\Contract\CreateContractUseCase;
 use App\Domain\Entities\Contract;
-use App\Domain\Entities\Quotation;
-use App\Domain\Entities\TrackingEvent;
+use App\Domain\Exceptions\CarrierNotInResultsException;
+use App\Domain\Exceptions\QuotationNotFoundException;
+use App\Domain\Exceptions\QuotationNotValidException;
 use App\Domain\Repositories\ContractRepository;
 use App\Domain\Repositories\QuotationRepository;
 use App\Domain\Repositories\TrackingEventRepository;
@@ -12,9 +14,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class ContractController extends Controller
 {
@@ -22,6 +22,7 @@ class ContractController extends Controller
         private ContractRepository $contractRepository,
         private QuotationRepository $quotationRepository,
         private TrackingEventRepository $trackingRepository,
+        private CreateContractUseCase $createContractUseCase,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -57,81 +58,28 @@ class ContractController extends Controller
 
         $companyId = $request->attributes->get('company_id');
 
-        return DB::transaction(function () use ($request, $companyId) {
-            $quotation = $this->quotationRepository->findByIdForUpdate($request->input('quotation_id'));
-
-            if (!$quotation || $quotation->companyId !== $companyId) {
-                return response()->json(['message' => 'Cotação não encontrada'], 404);
-            }
-
-            if ($quotation->status !== Quotation::STATUS_VALID) {
-                return response()->json(['message' => 'Cotação não está mais válida'], 422);
-            }
-
-            $selectedResult = collect($quotation->results)->first(
-                fn($r) => $r['carrier_id'] === $request->input('carrier_id')
-            );
-
-            if (!$selectedResult) {
-                return response()->json(['message' => 'Transportadora não encontrada nos resultados'], 422);
-            }
-
-            $contract = Contract::fromQuotation(
-                id: Str::orderedUuid()->toString(),
-                documentNumber: 'CT-e ' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+        try {
+            $contract = $this->createContractUseCase->execute(
+                quotationId: $request->input('quotation_id'),
+                carrierId: $request->input('carrier_id'),
                 companyId: $companyId,
-                quotationId: $quotation->id,
-                nfNumber: $quotation->nfNumber,
-                carrierId: $selectedResult['carrier_id'],
-                carrierName: $selectedResult['carrier_name'],
-                originCity: $quotation->originCity,
-                destinationCity: $quotation->destinationCity,
-                destinationState: $quotation->destinationState,
-                freightValue: $selectedResult['freight_value'],
-                fees: $selectedResult['fees'],
-                finalValue: $selectedResult['final_value'],
-                deadline: $selectedResult['deadline'],
             );
+        } catch (QuotationNotFoundException $e) {
+            return response()->json(['message' => $e->getMessage()], 404);
+        } catch (QuotationNotValidException | CarrierNotInResultsException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
-            $this->contractRepository->save($contract);
-
-            $quotation = new Quotation(
-                id: $quotation->id, companyId: $quotation->companyId,
-                userId: $quotation->userId,
-                nfNumber: $quotation->nfNumber, senderCnpj: $quotation->senderCnpj,
-                receiverCnpj: $quotation->receiverCnpj,
-                originCep: $quotation->originCep, destinationCep: $quotation->destinationCep,
-                originCity: $quotation->originCity, destinationCity: $quotation->destinationCity,
-                destinationState: $quotation->destinationState,
-                weight: $quotation->weight, boxes: $quotation->boxes,
-                volume: $quotation->volume, cargoValue: $quotation->cargoValue,
-                status: Quotation::STATUS_CONTRACTED, results: $quotation->results,
-                validUntil: $quotation->validUntil,
-                createdAt: $quotation->createdAt, updatedAt: now()->toIso8601String(),
-            );
-            $this->quotationRepository->save($quotation);
-
-            $event = TrackingEvent::create(
-                id: Str::orderedUuid()->toString(),
-                contractId: $contract->id,
-                title: 'Coleta Agendada',
-                date: now()->format('Y-m-d'),
-                time: now()->format('H:i'),
-                observation: 'Contratação confirmada',
-            );
-            $this->trackingRepository->save($event);
-
-            return response()->json([
-                'data' => [
-                    'id' => $contract->id,
-                    'nf_number' => $contract->nfNumber,
-                    'carrier_name' => $contract->carrierName,
-                    'final_value' => $contract->finalValue,
-                    'status' => $contract->status,
-                    'document_number' => $contract->documentNumber,
-                ],
-            ], 201);
-        });
+        return response()->json([
+            'data' => [
+                'id' => $contract->id,
+                'nf_number' => $contract->nfNumber,
+                'carrier_name' => $contract->carrierName,
+                'final_value' => $contract->finalValue,
+                'status' => $contract->status,
+                'document_number' => $contract->documentNumber,
+            ],
+        ], 201);
     }
 
     public function show(Request $request, string $id): JsonResponse

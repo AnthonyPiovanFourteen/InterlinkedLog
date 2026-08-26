@@ -15,6 +15,7 @@ use App\Domain\Services\AuthService;
 use App\Domain\Services\CepLookupService;
 use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
+use App\Domain\Services\TransactionManager;
 use App\Infrastructure\Repositories\Eloquent\EloquentAuditLogRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentCarrierRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentCompanyRepository;
@@ -25,6 +26,7 @@ use App\Infrastructure\Repositories\Eloquent\EloquentSystemLogRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentTrackingEventRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentUserRepository;
 use App\Infrastructure\Services\QuotationEngine;
+use App\Infrastructure\Services\DatabaseTransactionManager;
 use App\Infrastructure\Services\ReportGenerator;
 use App\Infrastructure\Services\TokenAuthService;
 use App\Infrastructure\Services\ViaCepLookupService;
@@ -49,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AuthService::class, TokenAuthService::class);
         $this->app->singleton(QuotationEngineService::class, QuotationEngine::class);
         $this->app->singleton(CepLookupService::class, ViaCepLookupService::class);
+        $this->app->singleton(TransactionManager::class, DatabaseTransactionManager::class);
         $this->app->singleton(ReportService::class, ReportGenerator::class);
     }
 
