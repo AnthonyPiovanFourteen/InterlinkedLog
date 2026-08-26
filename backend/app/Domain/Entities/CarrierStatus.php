@@ -14,4 +14,9 @@ class CarrierStatus
             self::INATIVA,
         ];
     }
+
+    public static function isValid(string $status): bool
+    {
+        return in_array($status, self::all());
+    }
 }
