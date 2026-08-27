@@ -87,7 +87,7 @@ class EloquentFreightTableRepository implements FreightTableRepository
             );
 
             $carrier = Carrier::find($table->carrierId);
-            $originUf = $carrier?->origin_uf ?? 'SP';
+            $originUf = $carrier->origin_uf ?? 'SP';
 
             if (!empty($table->routes)) {
                 FreightTableRoute::where('freight_table_id', $id)->delete();
@@ -174,7 +174,7 @@ class EloquentFreightTableRepository implements FreightTableRepository
             companyId: $model->company_id,
             name: $model->name,
             carrierId: $model->carrier_id,
-            originCity: $model->routes->first()?->origin_city ?? '',
+            originCity: $model->routes->first()->origin_city ?? '',
             validityStart: $model->valid_from,
             validityEnd: $model->valid_until,
             status: $model->status,
