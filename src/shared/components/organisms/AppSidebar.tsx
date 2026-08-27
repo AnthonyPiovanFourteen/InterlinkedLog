@@ -1,13 +1,27 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, FileText, ClipboardCheck, MapPin,
-  Truck, Users, ShieldCheck, ScrollText,
-  LogOut, PackageSearch,
+  LayoutDashboard,
+  FileText,
+  ClipboardCheck,
+  MapPin,
+  Truck,
+  Users,
+  ShieldCheck,
+  ScrollText,
+  LogOut,
+  PackageSearch,
 } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarFooter, SidebarGroup,
-  SidebarGroupContent, SidebarGroupLabel, SidebarHeader,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -18,9 +32,7 @@ const principais = [
   { title: "Rastreamento", url: "/rastreamento", icon: MapPin },
 ];
 
-const cadastros = [
-  { title: "Transportadoras", url: "/transportadoras", icon: Truck },
-];
+const cadastros = [{ title: "Transportadoras", url: "/transportadoras", icon: Truck }];
 
 const sistema = [
   { title: "Usuários", url: "/usuarios", icon: Users },
@@ -31,7 +43,8 @@ const sistema = [
 export function AppSidebar() {
   const { user, logout, isAdmin } = useAuth();
   const currentPath = useRouterState({ select: (s) => s.location.pathname });
-  const isActive = (path: string) => path === "/" ? currentPath === "/" : currentPath.startsWith(path);
+  const isActive = (path: string) =>
+    path === "/" ? currentPath === "/" : currentPath.startsWith(path);
 
   return (
     <Sidebar collapsible="icon">
@@ -42,7 +55,9 @@ export function AppSidebar() {
           </div>
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold tracking-tight">InterlinkedLog</span>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Painel de Controle</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              Painel de Controle
+            </span>
           </div>
         </Link>
       </SidebarHeader>
@@ -55,7 +70,10 @@ export function AppSidebar() {
               {principais.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url}><item.icon /><span>{item.title}</span></Link>
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -70,7 +88,10 @@ export function AppSidebar() {
               {cadastros.map((item) => (
                 <SidebarMenuItem key={item.url}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                    <Link to={item.url}><item.icon /><span>{item.title}</span></Link>
+                    <Link to={item.url}>
+                      <item.icon />
+                      <span>{item.title}</span>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -86,7 +107,10 @@ export function AppSidebar() {
                 {sistema.map((item) => (
                   <SidebarMenuItem key={item.url}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
-                      <Link to={item.url}><item.icon /><span>{item.title}</span></Link>
+                      <Link to={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

@@ -1,7 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PageHeader } from "@/shared/components/molecules/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
@@ -59,23 +66,37 @@ function LogsPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Carregando...</TableCell>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    Carregando...
+                  </TableCell>
                 </TableRow>
               ) : items.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">Nenhum log encontrado.</TableCell>
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                    Nenhum log encontrado.
+                  </TableCell>
                 </TableRow>
               ) : (
                 items.map((l) => (
                   <TableRow key={l.id}>
-                    <TableCell className="text-muted-foreground tabular-nums whitespace-nowrap">{fmtDate(l.created_at)}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums whitespace-nowrap">
+                      {fmtDate(l.created_at)}
+                    </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className={cn("font-medium border px-2 py-0.5 text-[11px]", levelColors[l.level] ?? "bg-muted text-muted-foreground")}>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "font-medium border px-2 py-0.5 text-[11px]",
+                          levelColors[l.level] ?? "bg-muted text-muted-foreground",
+                        )}
+                      >
                         {l.level}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium">{l.event}</TableCell>
-                    <TableCell className="text-muted-foreground max-w-[400px] truncate">{l.message}</TableCell>
+                    <TableCell className="text-muted-foreground max-w-[400px] truncate">
+                      {l.message}
+                    </TableCell>
                   </TableRow>
                 ))
               )}

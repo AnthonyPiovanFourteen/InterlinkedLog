@@ -4,7 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PageHeader } from "@/shared/components/molecules/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
@@ -84,7 +91,9 @@ function AuditoriaPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">Carregando...</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    Carregando...
+                  </TableCell>
                 </TableRow>
               ) : items.length === 0 ? (
                 <TableRow>
@@ -95,9 +104,13 @@ function AuditoriaPage() {
               ) : (
                 items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell className="text-muted-foreground tabular-nums whitespace-nowrap">{fmtDate(item.created_at)}</TableCell>
+                    <TableCell className="text-muted-foreground tabular-nums whitespace-nowrap">
+                      {fmtDate(item.created_at)}
+                    </TableCell>
                     <TableCell className="font-medium">{item.user_name}</TableCell>
-                    <TableCell><Badge variant="outline">{item.module}</Badge></TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{item.module}</Badge>
+                    </TableCell>
                     <TableCell>{item.action}</TableCell>
                     <TableCell className="text-muted-foreground">{item.entity}</TableCell>
                   </TableRow>

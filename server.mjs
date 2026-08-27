@@ -19,7 +19,9 @@ const server = createServer(async (req, res) => {
     try {
       const headers = normalizeHeaders(req.headers);
       const xff = headers["x-forwarded-for"];
-      headers["x-forwarded-for"] = xff ? `${xff}, ${req.socket.remoteAddress}` : req.socket.remoteAddress;
+      headers["x-forwarded-for"] = xff
+        ? `${xff}, ${req.socket.remoteAddress}`
+        : req.socket.remoteAddress;
       headers["x-forwarded-proto"] = "http";
       headers["x-forwarded-host"] = req.headers.host;
 

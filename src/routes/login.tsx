@@ -52,7 +52,6 @@ function LoginPage() {
             Cote, contrate e rastreie suas cargas em uma única interface.
           </p>
         </div>
-
       </div>
 
       <div className="flex items-center justify-center p-6">
@@ -60,20 +59,32 @@ function LoginPage() {
           <CardContent className="p-8 space-y-6">
             <div className="space-y-1.5">
               <h2 className="text-xl font-semibold tracking-tight">Entrar na sua conta</h2>
-              <p className="text-sm text-muted-foreground">
-                Acesse o painel da sua organização.
-              </p>
+              <p className="text-sm text-muted-foreground">Acesse o painel da sua organização.</p>
             </div>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-1.5">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" type="email" placeholder="voce@empresa.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="voce@empresa.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="senha">Senha</Label>
                 </div>
-                <Input id="senha" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <Input
+                  id="senha"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full" disabled={loading}>

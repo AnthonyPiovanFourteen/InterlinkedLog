@@ -21,7 +21,7 @@ const statusMap: Record<string, Tone> = {
   Pago: "success",
   Pendente: "warning",
   VALIDA: "info",
-  "Válida": "info",
+  Válida: "info",
   "Em Trânsito": "info",
   Coletado: "info",
   Agendado: "muted",
@@ -55,14 +55,17 @@ export function StatusBadge({ status }: { status: string }) {
       variant="outline"
       className={cn("font-medium border px-2 py-0.5 text-[11px]", tones[tone])}
     >
-      <span className={cn("mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
-        tone === "success" && "bg-success",
-        tone === "warning" && "bg-warning",
-        tone === "destructive" && "bg-destructive",
-        tone === "info" && "bg-info",
-        tone === "muted" && "bg-muted-foreground/60",
-        tone === "primary" && "bg-primary",
-      )} />
+      <span
+        className={cn(
+          "mr-1.5 inline-block h-1.5 w-1.5 rounded-full",
+          tone === "success" && "bg-success",
+          tone === "warning" && "bg-warning",
+          tone === "destructive" && "bg-destructive",
+          tone === "info" && "bg-info",
+          tone === "muted" && "bg-muted-foreground/60",
+          tone === "primary" && "bg-primary",
+        )}
+      />
       {status}
     </Badge>
   );

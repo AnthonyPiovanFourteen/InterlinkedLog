@@ -9,13 +9,20 @@ export function AppHeader() {
   const { user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const segments = pathname.split("/").filter(Boolean);
-  const initials = user?.name?.split(" ").map((s) => s[0]).slice(0, 2).join("") ?? "?";
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join("") ?? "?";
 
   return (
     <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b border-border bg-background/80 backdrop-blur px-4">
       <SidebarTrigger className="-ml-2" />
       <nav className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Link to="/" className="hover:text-foreground">Home</Link>
+        <Link to="/" className="hover:text-foreground">
+          Home
+        </Link>
         {segments.map((seg, i) => (
           <span key={seg} className="flex items-center gap-1">
             <ChevronRight className="h-3 w-3" />
@@ -32,7 +39,9 @@ export function AppHeader() {
         </div>
         <Bell className="h-4 w-4 text-muted-foreground cursor-pointer" />
         <Avatar className="h-7 w-7">
-          <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">{initials}</AvatarFallback>
+          <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
+            {initials}
+          </AvatarFallback>
         </Avatar>
       </div>
     </header>
