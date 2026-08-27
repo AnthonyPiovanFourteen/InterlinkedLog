@@ -51,7 +51,7 @@ class EloquentCompanyRepository implements CompanyRepository
             name: $model->name,
             cnpj: $model->cnpj,
             plan: $model->type,
-            status: $model->status,
+            status: null,
             createdAt: $model->created_at?->toIso8601String() ?? '',
             updatedAt: $model->updated_at?->toIso8601String() ?? '',
         );

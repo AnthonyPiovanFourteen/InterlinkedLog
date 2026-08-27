@@ -45,7 +45,7 @@ class EloquentSystemLogRepository implements SystemLogRepository
             level: $model->level,
             event: $model->event,
             message: $model->message,
-            createdAt: $model->created_at ? (is_string($model->created_at) ? $model->created_at : $model->created_at->toIso8601String()) : '',
+            createdAt: $model->created_at ?: '',
         );
     }
 }

@@ -50,7 +50,7 @@ class CreateContractUseCase
 
             $contract = Contract::fromQuotation(
                 id: Str::orderedUuid()->toString(),
-                documentNumber: 'CT-e ' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                documentNumber: 'CT-e ' . date('Ymd') . str_pad((string) rand(1, 9999), 4, '0', STR_PAD_LEFT),
                 companyId: $companyId,
                 quotationId: $quotation->id,
                 nfNumber: $quotation->nfNumber,

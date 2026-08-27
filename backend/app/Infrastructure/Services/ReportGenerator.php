@@ -25,8 +25,6 @@ class ReportGenerator implements ReportService
         $avgDeliveryTime = 0;
         $carrierCounts = [];
 
-        $deliveryDeltas = [];
-
         foreach ($contracts as $c) {
             $quotation = $this->quotationRepository->findById($c->quotationId);
             if ($quotation && count($quotation->results) > 1) {
@@ -40,10 +38,6 @@ class ReportGenerator implements ReportService
         }
 
         $topCarrier = !empty($carrierCounts) ? array_keys($carrierCounts, max($carrierCounts))[0] : null;
-
-        if (count($deliveryDeltas) > 0) {
-            $avgDeliveryTime = array_sum($deliveryDeltas) / count($deliveryDeltas);
-        }
 
         $quotationsByStatus = [];
         foreach ($quotations as $q) {

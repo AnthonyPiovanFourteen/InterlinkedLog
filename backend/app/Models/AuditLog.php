@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Models\Concerns\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string|null $created_at
+ */
 class AuditLog extends Model
 {
     use TenantScoped;

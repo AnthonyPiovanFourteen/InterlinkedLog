@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read \App\Models\FreightTableRoute $route
+ */
 class FreightTableWeightRange extends Model
 {
     public $incrementing = false;
@@ -25,7 +28,7 @@ class FreightTableWeightRange extends Model
         ];
     }
 
-    public function route()
+    public function route(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(FreightTableRoute::class, 'freight_table_route_id');
     }

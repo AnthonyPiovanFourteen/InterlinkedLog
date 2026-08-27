@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FreightTableWeightRange> $weightRanges
+ * @property-read \App\Models\FreightTable $freightTable
+ */
 class FreightTableRoute extends Model
 {
     public $incrementing = false;
@@ -25,12 +29,12 @@ class FreightTableRoute extends Model
         ];
     }
 
-    public function weightRanges()
+    public function weightRanges(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(FreightTableWeightRange::class);
     }
 
-    public function freightTable()
+    public function freightTable(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(FreightTable::class);
     }

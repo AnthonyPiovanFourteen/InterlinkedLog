@@ -5,6 +5,11 @@ namespace App\Models;
 use App\Models\Concerns\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read \App\Models\Carrier $carrier
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FreightTableRoute> $routes
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FreightTableFee> $fees
+ */
 class FreightTable extends Model
 {
     use TenantScoped;
@@ -29,17 +34,17 @@ class FreightTable extends Model
         ];
     }
 
-    public function carrier()
+    public function carrier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Carrier::class);
     }
 
-    public function routes()
+    public function routes(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(FreightTableRoute::class);
     }
 
-    public function fees()
+    public function fees(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(FreightTableFee::class);
     }

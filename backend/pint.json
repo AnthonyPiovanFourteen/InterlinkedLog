@@ -1,0 +1,9 @@
+<?php
+
+return [
+    'preset' => 'laravel',
+    'exclude' => [
+        'storage',
+        'vendor',
+    ],
+];

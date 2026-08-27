@@ -5,6 +5,9 @@ namespace App\Models;
 use App\Models\Concerns\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\QuotationResult> $results
+ */
 class Quotation extends Model
 {
     use TenantScoped;
@@ -39,7 +42,7 @@ class Quotation extends Model
         ];
     }
 
-    public function results()
+    public function results(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(QuotationResult::class);
     }

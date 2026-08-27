@@ -9,7 +9,6 @@ use App\Domain\Exceptions\QuotationNotFoundException;
 use App\Domain\Exceptions\QuotationNotValidException;
 use App\Domain\Repositories\ContractRepository;
 use App\Domain\Repositories\QuotationRepository;
-use App\Domain\Repositories\TrackingEventRepository;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,7 +20,6 @@ class ContractController extends Controller
     public function __construct(
         private ContractRepository $contractRepository,
         private QuotationRepository $quotationRepository,
-        private TrackingEventRepository $trackingRepository,
         private CreateContractUseCase $createContractUseCase,
     ) {}
 

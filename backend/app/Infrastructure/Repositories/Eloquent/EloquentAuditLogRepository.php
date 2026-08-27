@@ -51,7 +51,7 @@ class EloquentAuditLogRepository implements AuditLogRepository
             entityId: $model->entity_id,
             oldValues: $model->old_values,
             newValues: $model->new_values,
-            createdAt: $model->created_at ? (is_string($model->created_at) ? $model->created_at : $model->created_at->toIso8601String()) : '',
+            createdAt: $model->created_at ?: '',
         );
     }
 }
