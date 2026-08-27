@@ -30,11 +30,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null);
+    const t = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (t) {
-      api.get<AuthUser>("/me")
-        .then((u) => { setUser(u); setStoredUser(u); })
-        .catch(() => { setToken(null); setTokenState(null); setUser(null); setStoredUser(null); })
+      api
+        .get<AuthUser>("/me")
+        .then((u) => {
+          setUser(u);
+          setStoredUser(u);
+        })
+        .catch(() => {
+          setToken(null);
+          setTokenState(null);
+          setUser(null);
+          setStoredUser(null);
+        })
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
@@ -50,7 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    try { await api.post("/logout"); } catch {}
+    try {
+      await api.post("/logout");
+    } catch {
+      // logout é best-effort: a sessão local é limpa mesmo se a API falhar
+    }
     setToken(null);
     setTokenState(null);
     setUser(null);

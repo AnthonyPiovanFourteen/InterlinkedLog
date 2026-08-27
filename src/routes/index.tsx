@@ -1,13 +1,37 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileText, ClipboardCheck, PiggyBank, Award, DollarSign, Clock, Percent } from "lucide-react";
+import {
+  FileText,
+  ClipboardCheck,
+  PiggyBank,
+  Award,
+  DollarSign,
+  Clock,
+  Percent,
+} from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/shared/components/molecules/PageHeader";
 import { MetricCard } from "@/shared/components/molecules/MetricCard";
 import { api } from "@/lib/api";
 import { fmtCurr } from "@/lib/utils";
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 import { ComposableMap, Geographies, Geography, Line, Marker } from "react-simple-maps";
+
+interface GeoShape {
+  id: string;
+  rsmKey: string;
+  properties: Record<string, unknown>;
+}
 
 const BRAZIL_GEO_ID = "076";
 
@@ -42,44 +66,44 @@ interface DetailedData {
 const cityCoords: Record<string, [number, number]> = {
   "São Paulo": [-46.63, -23.55],
   "São Paulo/SP": [-46.63, -23.55],
-  "Marília": [-49.94, -22.21],
+  Marília: [-49.94, -22.21],
   "Marília/SP": [-49.94, -22.21],
-  "Londrina": [-51.16, -23.31],
+  Londrina: [-51.16, -23.31],
   "Londrina/PR": [-51.16, -23.31],
-  "Curitiba": [-49.27, -25.42],
+  Curitiba: [-49.27, -25.42],
   "Curitiba/PR": [-49.27, -25.42],
-  "Campinas": [-47.06, -22.90],
-  "Campinas/SP": [-47.06, -22.90],
-  "Bauru": [-49.06, -22.31],
+  Campinas: [-47.06, -22.9],
+  "Campinas/SP": [-47.06, -22.9],
+  Bauru: [-49.06, -22.31],
   "Bauru/SP": [-49.06, -22.31],
   "Presidente Prudente": [-51.38, -22.12],
   "Presidente Prudente/SP": [-51.38, -22.12],
   "Ribeirão Preto": [-47.81, -21.17],
   "Ribeirão Preto/SP": [-47.81, -21.17],
   "São José do Rio Preto": [-49.37, -20.81],
-  "Maringá": [-51.93, -23.42],
+  Maringá: [-51.93, -23.42],
   "Maringá/PR": [-51.93, -23.42],
-  "Uberlândia": [-48.27, -18.91],
+  Uberlândia: [-48.27, -18.91],
   "Uberlândia/MG": [-48.27, -18.91],
-  "Goiânia": [-49.26, -16.68],
+  Goiânia: [-49.26, -16.68],
   "Goiânia/GO": [-49.26, -16.68],
   "Campo Grande": [-54.64, -20.44],
   "Campo Grande/MS": [-54.64, -20.44],
   "Belo Horizonte": [-43.93, -19.91],
   "Belo Horizonte/MG": [-43.93, -19.91],
-  "Rio de Janeiro": [-43.20, -22.90],
-  "Rio de Janeiro/RJ": [-43.20, -22.90],
+  "Rio de Janeiro": [-43.2, -22.9],
+  "Rio de Janeiro/RJ": [-43.2, -22.9],
   "Porto Alegre": [-51.22, -30.03],
   "Porto Alegre/RS": [-51.22, -30.03],
-  "Florianópolis": [-48.54, -27.59],
+  Florianópolis: [-48.54, -27.59],
   "Florianópolis/SC": [-48.54, -27.59],
-  "Salvador": [-38.50, -12.97],
-  "Salvador/BA": [-38.50, -12.97],
-  "Brasília": [-47.88, -15.79],
+  Salvador: [-38.5, -12.97],
+  "Salvador/BA": [-38.5, -12.97],
+  Brasília: [-47.88, -15.79],
   "Brasília/DF": [-47.88, -15.79],
-  "Santos": [-46.33, -23.95],
+  Santos: [-46.33, -23.95],
   "Santos/SP": [-46.33, -23.95],
-  "Uberaba": [-47.93, -19.75],
+  Uberaba: [-47.93, -19.75],
   "Uberaba/MG": [-47.93, -19.75],
 };
 
@@ -224,7 +248,10 @@ function PainelPage() {
                       strokeWidth={2}
                     >
                       {statusPie.map((entry, i) => (
-                        <Cell key={i} fill={STATUS_COLORS[entry.name] ?? DIST_COLORS[i % DIST_COLORS.length]} />
+                        <Cell
+                          key={i}
+                          fill={STATUS_COLORS[entry.name] ?? DIST_COLORS[i % DIST_COLORS.length]}
+                        />
                       ))}
                     </Pie>
                   </PieChart>
@@ -234,7 +261,10 @@ function PainelPage() {
                     <div key={i} className="flex items-center gap-2">
                       <span
                         className="h-2.5 w-2.5 rounded-full shrink-0"
-                        style={{ backgroundColor: STATUS_COLORS[entry.name] ?? DIST_COLORS[i % DIST_COLORS.length] }}
+                        style={{
+                          backgroundColor:
+                            STATUS_COLORS[entry.name] ?? DIST_COLORS[i % DIST_COLORS.length],
+                        }}
                       />
                       <span className="text-muted-foreground">{entry.name}</span>
                       <span className="ml-auto font-medium">{entry.value}</span>
@@ -243,7 +273,9 @@ function PainelPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado disponível.</p>
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                Nenhum dado disponível.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -277,7 +309,9 @@ function PainelPage() {
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado disponível.</p>
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                Nenhum dado disponível.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -297,8 +331,8 @@ function PainelPage() {
               <Geographies geography="/brazil-topo.json">
                 {({ geographies }) =>
                   geographies
-                    .filter((geo: any) => geo.id === BRAZIL_GEO_ID)
-                    .map((geo: any) => (
+                    .filter((geo: GeoShape) => geo.id === BRAZIL_GEO_ID)
+                    .map((geo: GeoShape) => (
                       <Geography
                         key={geo.rsmKey}
                         geography={geo}
@@ -328,10 +362,20 @@ function PainelPage() {
                       strokeLinecap="round"
                     />
                     <Marker coordinates={coordsA}>
-                      <circle r={4} fill={DIST_COLORS[i % DIST_COLORS.length]} stroke="#fff" strokeWidth={1} />
+                      <circle
+                        r={4}
+                        fill={DIST_COLORS[i % DIST_COLORS.length]}
+                        stroke="#fff"
+                        strokeWidth={1}
+                      />
                     </Marker>
                     <Marker coordinates={coordsB}>
-                      <circle r={4} fill={DIST_COLORS[i % DIST_COLORS.length]} stroke="#fff" strokeWidth={1} />
+                      <circle
+                        r={4}
+                        fill={DIST_COLORS[i % DIST_COLORS.length]}
+                        stroke="#fff"
+                        strokeWidth={1}
+                      />
                     </Marker>
                   </g>
                 );
@@ -369,7 +413,9 @@ function PainelPage() {
                 </tbody>
               </table>
             ) : (
-              <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado disponível.</p>
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                Nenhum dado disponível.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -395,13 +441,17 @@ function PainelPage() {
                           }}
                         />
                       </div>
-                      <span className="text-sm tabular-nums font-medium w-8 text-right">{r.count}</span>
+                      <span className="text-sm tabular-nums font-medium w-8 text-right">
+                        {r.count}
+                      </span>
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground py-8 text-center">Nenhum dado disponível.</p>
+              <p className="text-sm text-muted-foreground py-8 text-center">
+                Nenhum dado disponível.
+              </p>
             )}
           </CardContent>
         </Card>
