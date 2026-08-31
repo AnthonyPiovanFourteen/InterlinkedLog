@@ -1,4 +1,7 @@
-FROM php:8.4-fpm-alpine AS base
+# Base fixada por digest (Alpine 3.24.1): a tag é móvel — sem o digest,
+# o pin de pacote abaixo quebraria quando o repositório Alpine substituir
+# a versão. Atualizar o digest é ato deliberado.
+FROM php:8.4-fpm-alpine@sha256:49734670eccf414af884c2a0c2e558401e228615f8028f1c9fca30a0d4fb1bc2 AS base
 
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
