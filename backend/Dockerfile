@@ -1,6 +1,8 @@
 FROM php:8.4-fpm-alpine AS base
 
-RUN apk add --no-cache nginx sqlite-dev curl \
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
+
+RUN apk add --no-cache nginx=1.30.4-r1 sqlite-dev=3.53.4-r0 curl=8.21.0-r0 \
     && docker-php-ext-install pdo pdo_sqlite pdo_mysql
 
 WORKDIR /app

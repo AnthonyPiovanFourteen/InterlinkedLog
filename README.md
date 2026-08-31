@@ -167,6 +167,11 @@ O MySQL persiste no volume `mysql-data`. Não há backup automático — agende
 um banco separado conferindo as contagens por tabela. Backup não verificado
 não é backup.
 
+O seed é **idempotente** (o seeder ignora banco populado, e o entrypoint só
+semeia com o banco vazio). Para recarregar os dados de demonstração
+intencionalmente, use `migrate:fresh --seed` — `db:seed --force` num banco
+populado não faz nada.
+
 ## Checagem de integração (rede/proxy)
 
 ```bash
