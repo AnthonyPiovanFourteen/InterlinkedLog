@@ -257,6 +257,16 @@ entrada inválida do usuário; 503 é indisponibilidade de infraestrutura.
   proxy/LB externo entrar no caminho, configurar a faixa dele no
   `trustProxies` passa a ser obrigatório — antes disso, verificar
   `real_ip`/`proxy_protocol` no nginx.
+- **`Company::$status` (pendência ao mantenedor).** A coluna `status` não existe na tabela
+  `companies`; `GET /api/v1/companies/{id}` sempre devolveu `status: null`. Decisão de negócio:
+  adicionar a coluna com o status real, ou remover o campo da resposta. Não implementado.
+- **Pendências ao mantenedor (6):** `frete_minimo`/`cubagem` como taxas fixas (piso/fator de
+  cubagem), normalização de acentos no motor (ver colação acima), token em `localStorage`,
+  fila assíncrona (`company_id` no payload do job), `trustProxies` por IP fixo, `Company::$status`.
+- **Dependências novas no backend (`composer.json`):** o serviço `test` usa o `vendor` da imagem
+  (volume anônimo) — toda mudança em `composer.json` exige `docker compose build test` antes de
+  `docker compose run --rm test`. No CI, a análise estática instala deps do commit, não de imagem
+  cacheada.
 - **`APP_DEBUG=false` e `APP_ENV=production` por padrão** no compose;
   sobrescreva com `APP_DEBUG=true`/`APP_ENV=local` no `.env` da raiz para
   desenvolvimento.

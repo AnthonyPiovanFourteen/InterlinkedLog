@@ -52,7 +52,6 @@ class ReportFlowTest extends ApiTestCase
         $carrier = $this->getJson('/api/v1/carriers', $this->authHeaders())
             ->assertOk()
             ->json('data')[0];
-
         $performance = $this->getJson(
             '/api/v1/carriers/' . $carrier['id'] . '/performance',
             $this->authHeaders(),
@@ -70,7 +69,6 @@ class ReportFlowTest extends ApiTestCase
         $carrier = $this->getJson('/api/v1/carriers', $this->authHeaders())
             ->assertOk()
             ->json('data')[0];
-
         $performance = $this->getJson(
             '/api/v1/carriers/' . $carrier['id'] . '/performance',
             $this->authHeaders($tenantB['token']),

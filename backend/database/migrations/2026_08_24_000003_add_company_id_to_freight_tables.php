@@ -26,9 +26,17 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('freight_tables', function (Blueprint $table) {
-            $table->dropUnique(['carrier_id', 'company_id', 'valid_from']);
+            // O MySQL não permite dropar o índice único enquanto uma FK
+            // depender dele (carrier_id é o prefixo) — dropar as FKs
+            // primeiro e recriar a de carrier_id ao final.
+            $table->dropForeign(['carrier_id']);
             $table->dropForeign(['company_id']);
+            $table->dropUnique(['carrier_id', 'company_id', 'valid_from']);
             $table->dropColumn('company_id');
+        });
+
+        Schema::table('freight_tables', function (Blueprint $table) {
+            $table->foreign('carrier_id')->references('id')->on('carriers')->cascadeOnDelete();
         });
     }
 };

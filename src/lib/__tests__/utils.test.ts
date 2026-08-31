@@ -16,8 +16,9 @@ describe("utils", () => {
     // CARACTERIZAÇÃO: congela comportamento SABIDAMENTE INCORRETO.
     // new Date("YYYY-MM-DD") é UTC e o toLocaleDateString converte para o
     // fuso local — em UTC-3 a data aparece um dia antes. Nenhum chamador
-    // atual dispara o defeito (created_at chega com fuso); o risco é
-    // futuro (deadline, valid_until, date de rastreio). Ao corrigir,
+    // atual dispara o defeito: os únicos usos (auditoria.tsx e logs.tsx)
+    // passam created_at, que chega com fuso. O risco é futuro (deadline,
+    // valid_until, date de rastreio — colunas date puras). Ao corrigir,
     // estes números DEVEM mudar.
     expect(fmtDate("2026-08-25")).toBe("24/08/2026");
     expect(fmtDate("2026-08-25T12:00:00")).toBe("25/08/2026");

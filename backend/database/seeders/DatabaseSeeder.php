@@ -22,6 +22,11 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Company::exists()) {
+            $this->command->info('Banco já populado — seed ignorado');
+            return;
+        }
+
         // 1. Company
         $company = Company::create([
             'id' => Str::orderedUuid()->toString(),
