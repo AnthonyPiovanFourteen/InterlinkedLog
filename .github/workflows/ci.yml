@@ -1,0 +1,184 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+
+      - name: Instalar dependências do backend (do lock)
+        working-directory: backend
+        run: composer install --no-interaction --no-progress
+
+      - name: Pint
+        working-directory: backend
+        run: vendor/bin/pint --test
+
+      - name: PHPStan (nível 5)
+        working-directory: backend
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=512M
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+
+      - name: Cache bun
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('bun.lock') }}
+
+      - name: Instalar dependências do frontend (do lock)
+        run: bun install --frozen-lockfile
+
+      - name: ESLint
+        run: bun run lint
+
+      - name: TypeScript
+        run: bunx tsc --noEmit
+
+      - name: hadolint
+        run: |
+          docker run --rm -v "$PWD/Dockerfile:/Dockerfile" hadolint/hadolint:latest-alpine hadolint /Dockerfile
+          docker run --rm -v "$PWD/backend/Dockerfile:/Dockerfile" hadolint/hadolint:latest-alpine hadolint /Dockerfile
+
+  test-backend:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: interlinkedlog_test
+          MYSQL_USER: interlinked
+          MYSQL_PASSWORD: interlinked
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uinterlinked -pinterlinked"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+
+      - name: Instalar dependências do backend (do lock)
+        working-directory: backend
+        run: composer install --no-interaction --no-progress
+
+      - name: Suíte (Unit + Feature + Arch)
+        working-directory: backend
+        run: php artisan test
+
+  test-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.14"
+
+      - name: Cache bun
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('bun.lock') }}
+
+      - name: Instalar dependências do frontend (do lock)
+        run: bun install --frozen-lockfile
+
+      - name: Vitest
+        run: bun run test:run
+
+  test-arch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          coverage: none
+
+      - name: Cache composer
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: composer-${{ hashFiles('backend/composer.lock') }}
+
+      - name: Instalar dependências do backend (do lock)
+        working-directory: backend
+        run: composer install --no-interaction --no-progress
+
+      - name: PHPat (regras hexagonais)
+        working-directory: backend
+        run: vendor/bin/phpstan analyse --configuration=phpstan.arch.neon --no-progress --memory-limit=512M
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build das imagens
+        run: docker compose build backend frontend
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # APP_ENV=local + chave própria de CI: a guarda do entrypoint não
+      # permite a chave pública do compose em produção, e o throttle do
+      # integration-check esgota baldes de propósito — a stack deste job é
+      # isolada (nenhum outro job a usa).
+      - name: Ambiente de CI
+        run: |
+          printf 'APP_ENV=local\nAPP_KEY=base64:%s\n' "$(openssl rand -base64 32)" > .env
+
+      - name: Subir a stack
+        run: docker compose up -d --build
+
+      - name: Aguardar backend healthy
+        run: |
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:3000/up > /dev/null 2>&1; then
+              echo "backend pronto (tentativa $i)"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "backend não ficou pronto em 120s"
+          docker compose logs backend || true
+          exit 1
+
+      - name: Checagem de integração (E2E, throttle por cliente, forja)
+        run: ./scripts/integration-check.sh
