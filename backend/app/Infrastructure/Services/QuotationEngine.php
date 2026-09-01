@@ -21,9 +21,10 @@ class QuotationEngine implements QuotationEngineService
     public function cepToCity(string $cep): array
     {
         $city = $this->cepLookupService->lookup($cep);
-        if (!$city) {
+        if (! $city) {
             throw new CepNotFoundException($cep);
         }
+
         return $city;
     }
 
@@ -33,7 +34,9 @@ class QuotationEngine implements QuotationEngineService
         $carriers = $this->carrierRepository->findAll();
 
         foreach ($carriers as $carrier) {
-            if ($carrier->status !== CarrierStatus::ATIVA) continue;
+            if ($carrier->status !== CarrierStatus::ATIVA) {
+                continue;
+            }
 
             $table = $this->freightTableRepository->findActiveByCarrierAndRoute(
                 $quotation->companyId,
@@ -43,7 +46,9 @@ class QuotationEngine implements QuotationEngineService
                 $quotation->destinationState,
             );
 
-            if (!$table) continue;
+            if (! $table) {
+                continue;
+            }
 
             $route = null;
             foreach ($table->routes as $r) {
@@ -53,7 +58,9 @@ class QuotationEngine implements QuotationEngineService
                 }
             }
 
-            if (!$route) continue;
+            if (! $route) {
+                continue;
+            }
 
             $weightRange = null;
             foreach ($route['weightRanges'] as $w) {
@@ -94,12 +101,13 @@ class QuotationEngine implements QuotationEngineService
         // cubagem sobre o peso. Aguarda decisão de negócio; não alterar o cálculo.
         $total = 0.0;
         foreach ($fees as $fee) {
-            if (!empty($fee['percentage'])) {
+            if (! empty($fee['percentage'])) {
                 $total += $cargoValue * ($fee['percentage'] / 100);
             } else {
                 $total += $fee['value'] ?? 0;
             }
         }
+
         return $total;
     }
 
@@ -107,7 +115,7 @@ class QuotationEngine implements QuotationEngineService
     {
         $breakdown = [];
         foreach ($fees as $fee) {
-            if (!empty($fee['percentage'])) {
+            if (! empty($fee['percentage'])) {
                 $amount = $cargoValue * ($fee['percentage'] / 100);
             } else {
                 $amount = $fee['value'] ?? 0;
@@ -117,17 +125,20 @@ class QuotationEngine implements QuotationEngineService
                 'amount' => round($amount, 2),
             ];
         }
+
         return $breakdown;
     }
 
     private function rank(array $results): array
     {
-        usort($results, fn($a, $b) => $a['final_value'] <=> $b['final_value']);
+        usort($results, fn ($a, $b) => $a['final_value'] <=> $b['final_value']);
 
-        if (count($results) > 0) $results[0]['best_price'] = true;
+        if (count($results) > 0) {
+            $results[0]['best_price'] = true;
+        }
 
         $byDeadline = $results;
-        usort($byDeadline, fn($a, $b) => $a['deadline'] <=> $b['deadline']);
+        usort($byDeadline, fn ($a, $b) => $a['deadline'] <=> $b['deadline']);
         if (count($byDeadline) > 0) {
             foreach ($results as &$r) {
                 if ($r['carrier_id'] === $byDeadline[0]['carrier_id']) {
@@ -138,7 +149,7 @@ class QuotationEngine implements QuotationEngineService
         }
 
         $byCB = $results;
-        usort($byCB, fn($a, $b) => ($a['final_value'] / max(1, $a['deadline'])) <=> ($b['final_value'] / max(1, $b['deadline'])));
+        usort($byCB, fn ($a, $b) => ($a['final_value'] / max(1, $a['deadline'])) <=> ($b['final_value'] / max(1, $b['deadline'])));
         if (count($byCB) > 0) {
             foreach ($results as &$r) {
                 if ($r['carrier_id'] === $byCB[0]['carrier_id']) {

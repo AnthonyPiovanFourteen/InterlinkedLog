@@ -2,19 +2,19 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
-use App\Models\User;
+use App\Domain\Entities\CarrierStatus;
 use App\Models\Carrier;
+use App\Models\Company;
+use App\Models\Contract;
 use App\Models\FreightTable;
+use App\Models\FreightTableFee;
 use App\Models\FreightTableRoute;
 use App\Models\FreightTableWeightRange;
-use App\Models\FreightTableFee;
 use App\Models\Quotation;
 use App\Models\QuotationResult;
-use App\Models\Contract;
-use App\Models\TrackingEvent;
 use App\Models\SystemLog;
-use App\Domain\Entities\CarrierStatus;
+use App\Models\TrackingEvent;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
     {
         if (Company::exists()) {
             $this->command->info('Banco já populado — seed ignorado');
+
             return;
         }
 
@@ -80,7 +81,7 @@ class DatabaseSeeder extends Seeder
                 'cnpj' => $cnpj,
                 'origin_city' => $city,
                 'origin_uf' => $uf,
-                'contact_name' => 'Contato ' . $name,
+                'contact_name' => 'Contato '.$name,
                 'contact_phone' => '(11) 3000-0000',
                 'status' => CarrierStatus::ATIVA,
             ]);
@@ -91,7 +92,7 @@ class DatabaseSeeder extends Seeder
                 'id' => Str::orderedUuid()->toString(),
                 'company_id' => $company->id,
                 'carrier_id' => $carrier->id,
-                'name' => 'Tabela Geral ' . $name,
+                'name' => 'Tabela Geral '.$name,
                 'valid_from' => '2026-01-01',
                 'valid_until' => '2026-12-31',
                 'status' => 'Ativa',
@@ -133,7 +134,7 @@ class DatabaseSeeder extends Seeder
                 ]);
 
                 // Weight ranges
-                $wrs = [[0,30,85.50,2], [31,100,142.00,3], [101,300,285.00,4]];
+                $wrs = [[0, 30, 85.50, 2], [31, 100, 142.00, 3], [101, 300, 285.00, 4]];
                 foreach ($wrs as $wr) {
                     FreightTableWeightRange::create([
                         'id' => Str::orderedUuid()->toString(),
@@ -204,7 +205,7 @@ class DatabaseSeeder extends Seeder
             'final_value' => $bestResult->final_value,
             'deadline' => $bestResult->deadline,
             'status' => 'Em Trânsito',
-            'document_number' => 'OC-' . date('Ymd') . '-0001',
+            'document_number' => 'OC-'.date('Ymd').'-0001',
             'cte_number' => null,
         ]);
 

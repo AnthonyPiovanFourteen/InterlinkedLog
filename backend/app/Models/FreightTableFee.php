@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FreightTableFee extends Model
 {
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

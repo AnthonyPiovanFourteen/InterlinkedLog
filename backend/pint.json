@@ -1,9 +1,7 @@
-<?php
-
-return [
-    'preset' => 'laravel',
-    'exclude' => [
-        'storage',
-        'vendor',
-    ],
-];
+{
+    "preset": "laravel",
+    "exclude": [
+        "storage",
+        "vendor"
+    ]
+}

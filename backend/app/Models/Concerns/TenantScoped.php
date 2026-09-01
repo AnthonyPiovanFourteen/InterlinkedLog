@@ -8,6 +8,6 @@ trait TenantScoped
 {
     protected static function bootTenantScoped(): void
     {
-        static::addGlobalScope(new TenantScope());
+        static::addGlobalScope(new TenantScope);
     }
 }

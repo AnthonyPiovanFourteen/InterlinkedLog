@@ -1,17 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\CarrierController;
+use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\FreightTableController;
 use App\Http\Controllers\Api\QuotationController;
-use App\Http\Controllers\Api\ContractController;
-use App\Http\Controllers\Api\TrackingController;
 use App\Http\Controllers\Api\ReportController;
-use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\SystemLogController;
+use App\Http\Controllers\Api\TrackingController;
+use App\Http\Controllers\Api\UserController;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
 

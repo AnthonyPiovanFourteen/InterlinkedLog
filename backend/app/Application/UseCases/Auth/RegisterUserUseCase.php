@@ -22,7 +22,7 @@ class RegisterUserUseCase
         }
 
         $company = $this->companyRepository->findById($data['company_id']);
-        if (!$company) {
+        if (! $company) {
             $company = Company::create(Str::orderedUuid()->toString(), $data['company_name'], $data['company_cnpj'] ?? '');
             $this->companyRepository->save($company);
         }

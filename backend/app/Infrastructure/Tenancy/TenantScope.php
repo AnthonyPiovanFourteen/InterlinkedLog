@@ -14,7 +14,7 @@ class TenantScope implements Scope
         $companyId = app(Request::class)->attributes->get('company_id');
 
         if ($companyId) {
-            $builder->where($model->getTable() . '.company_id', $companyId);
+            $builder->where($model->getTable().'.company_id', $companyId);
         }
     }
 }

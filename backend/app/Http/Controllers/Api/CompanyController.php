@@ -21,7 +21,7 @@ class CompanyController extends Controller
 
         $company = $this->companyRepository->findById($id);
 
-        if (!$company) {
+        if (! $company) {
             return response()->json(['message' => 'Empresa não encontrada'], 404);
         }
 

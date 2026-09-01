@@ -24,7 +24,7 @@ class TrackingTenancyTest extends ApiTestCase
         $tenantB = $this->createTenant('b@interlinked.io');
         $flowB = $this->createContractedFlow($tenantB['token']);
 
-        $this->getJson('/api/v1/tracking/' . $flowB['contract_id'], $this->authHeaders())
+        $this->getJson('/api/v1/tracking/'.$flowB['contract_id'], $this->authHeaders())
             ->assertStatus(404);
     }
 
@@ -32,7 +32,7 @@ class TrackingTenancyTest extends ApiTestCase
     {
         $flowA = $this->createContractedFlow();
 
-        $events = $this->getJson('/api/v1/tracking/' . $flowA['contract_id'], $this->authHeaders())
+        $events = $this->getJson('/api/v1/tracking/'.$flowA['contract_id'], $this->authHeaders())
             ->assertOk()
             ->json('data');
 

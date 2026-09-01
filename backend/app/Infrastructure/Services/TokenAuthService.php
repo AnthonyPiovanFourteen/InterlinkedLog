@@ -12,11 +12,11 @@ class TokenAuthService implements AuthService
     public function login(string $email, string $password): ?array
     {
         $user = $this->userRepository->findByEmail($email);
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
-        if (!password_verify($password, $user->passwordHash)) {
+        if (! password_verify($password, $user->passwordHash)) {
             return null;
         }
 
@@ -44,7 +44,7 @@ class TokenAuthService implements AuthService
     public function validateToken(string $token): ?array
     {
         $user = $this->userRepository->findByToken($token);
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 

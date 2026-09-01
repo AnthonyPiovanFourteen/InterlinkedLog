@@ -21,9 +21,9 @@ class AuditLogController extends Controller
         $companyId = $request->attributes->get('company_id');
         $logs = $this->auditLogRepository->findByCompany($companyId);
 
-        usort($logs, fn(AuditLog $a, AuditLog $b) => $b->createdAt <=> $a->createdAt);
+        usort($logs, fn (AuditLog $a, AuditLog $b) => $b->createdAt <=> $a->createdAt);
 
-        $data = array_map(fn(AuditLog $l) => [
+        $data = array_map(fn (AuditLog $l) => [
             'id' => $l->id,
             'user_id' => $l->userId,
             'user_name' => $l->userName,

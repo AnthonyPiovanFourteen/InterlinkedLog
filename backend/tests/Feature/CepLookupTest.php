@@ -26,7 +26,7 @@ class CepLookupTest extends ApiTestCase
         ]);
 
         $this->assertSame(['Americana', 'SP'], app(CepLookupService::class)->lookup('13465-000'));
-        Http::assertSent(fn($request) => str_contains($request->url(), '13465000'));
+        Http::assertSent(fn ($request) => str_contains($request->url(), '13465000'));
     }
 
     public function test_unmapped_unknown_cep_returns_null(): void

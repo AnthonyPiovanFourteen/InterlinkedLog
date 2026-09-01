@@ -14,21 +14,30 @@ class EloquentUserRepository implements UserRepository
     public function findById(string $id): ?UserEntity
     {
         $model = User::find($id);
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
     public function findByEmail(string $email): ?UserEntity
     {
         $model = User::withoutGlobalScope(TenantScope::class)->where('email', $email)->first();
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
     public function findByToken(string $token): ?UserEntity
     {
         $userId = Cache::get("user_token:{$token}");
-        if (!$userId) return null;
+        if (! $userId) {
+            return null;
+        }
+
         return $this->findById($userId);
     }
 
@@ -38,7 +47,7 @@ class EloquentUserRepository implements UserRepository
         User::updateOrCreate(
             ['id' => $id],
             [
-                                'id' => $id,
+                'id' => $id,
                 'name' => $user->name,
                 'email' => $user->email,
                 'password' => $user->passwordHash,
@@ -61,14 +70,16 @@ class EloquentUserRepository implements UserRepository
     {
         return User::where('company_id', $companyId)
             ->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
     public function setToken(string $userId, ?string $token): void
     {
         $user = User::find($userId);
-        if (!$user) return;
+        if (! $user) {
+            return;
+        }
 
         $oldToken = Cache::get("user_id_token:{$userId}");
         if ($oldToken) {

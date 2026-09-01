@@ -27,10 +27,12 @@ class ContractController extends Controller
     {
         $companyId = $request->attributes->get('company_id');
         $filters = [];
-        if ($request->has('status')) $filters['status'] = $request->input('status');
+        if ($request->has('status')) {
+            $filters['status'] = $request->input('status');
+        }
         $contracts = $this->contractRepository->findByCompany($companyId, $filters);
 
-        $data = array_map(fn(Contract $c) => [
+        $data = array_map(fn (Contract $c) => [
             'id' => $c->id, 'nf_number' => $c->nfNumber,
             'carrier_name' => $c->carrierName,
             'final_value' => $c->finalValue, 'status' => $c->status,
@@ -64,7 +66,7 @@ class ContractController extends Controller
             );
         } catch (QuotationNotFoundException $e) {
             return response()->json(['message' => $e->getMessage()], 404);
-        } catch (QuotationNotValidException | CarrierNotInResultsException $e) {
+        } catch (QuotationNotValidException|CarrierNotInResultsException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
@@ -85,7 +87,7 @@ class ContractController extends Controller
         $companyId = $request->attributes->get('company_id');
         $contract = $this->contractRepository->findById($id);
 
-        if (!$contract || $contract->companyId !== $companyId) {
+        if (! $contract || $contract->companyId !== $companyId) {
             return response()->json(['message' => 'Contratação não encontrada'], 404);
         }
 
@@ -113,7 +115,7 @@ class ContractController extends Controller
         $companyId = $request->attributes->get('company_id');
         $contract = $this->contractRepository->findById($id);
 
-        if (!$contract || $contract->companyId !== $companyId) {
+        if (! $contract || $contract->companyId !== $companyId) {
             return response()->json(['message' => 'Contratação não encontrada'], 404);
         }
 
@@ -159,7 +161,7 @@ class ContractController extends Controller
         $companyId = $request->attributes->get('company_id');
         $contract = $this->contractRepository->findById($id);
 
-        if (!$contract || $contract->companyId !== $companyId) {
+        if (! $contract || $contract->companyId !== $companyId) {
             return response()->json(['message' => 'Contratação não encontrada'], 404);
         }
 
@@ -202,7 +204,7 @@ class ContractController extends Controller
         $companyId = $request->attributes->get('company_id');
         $contract = $this->contractRepository->findById($id);
 
-        if (!$contract || $contract->companyId !== $companyId) {
+        if (! $contract || $contract->companyId !== $companyId) {
             return response()->json(['message' => 'Contratação não encontrada'], 404);
         }
 

@@ -20,7 +20,7 @@ class UserController extends Controller
         $companyId = $request->attributes->get('company_id');
         $users = $this->userRepository->findByCompany($companyId);
 
-        $data = array_map(fn(User $u) => [
+        $data = array_map(fn (User $u) => [
             'id' => $u->id,
             'name' => $u->name,
             'email' => $u->email,
@@ -42,7 +42,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email',
             'password' => 'required|string|min:6',
-            'role' => 'required|string|in:' . implode(',', Role::all()),
+            'role' => 'required|string|in:'.implode(',', Role::all()),
         ]);
 
         if ($validator->fails()) {
@@ -80,7 +80,7 @@ class UserController extends Controller
         $companyId = $request->attributes->get('company_id');
         $user = $this->userRepository->findById($id);
 
-        if (!$user || $user->companyId !== $companyId) {
+        if (! $user || $user->companyId !== $companyId) {
             return response()->json(['message' => 'Usuário não encontrado'], 404);
         }
 
@@ -104,13 +104,13 @@ class UserController extends Controller
         $companyId = $request->attributes->get('company_id');
         $user = $this->userRepository->findById($id);
 
-        if (!$user || $user->companyId !== $companyId) {
+        if (! $user || $user->companyId !== $companyId) {
             return response()->json(['message' => 'Usuário não encontrado'], 404);
         }
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
-            'role' => 'sometimes|string|in:' . implode(',', Role::all()),
+            'role' => 'sometimes|string|in:'.implode(',', Role::all()),
             'status' => 'sometimes|string|in:Ativo,Inativo',
         ]);
 
@@ -149,7 +149,7 @@ class UserController extends Controller
         $companyId = $request->attributes->get('company_id');
         $user = $this->userRepository->findById($id);
 
-        if (!$user || $user->companyId !== $companyId) {
+        if (! $user || $user->companyId !== $companyId) {
             return response()->json(['message' => 'Usuário não encontrado'], 404);
         }
 

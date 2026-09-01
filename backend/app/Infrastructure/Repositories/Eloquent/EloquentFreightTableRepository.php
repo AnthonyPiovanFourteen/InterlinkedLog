@@ -19,7 +19,10 @@ class EloquentFreightTableRepository implements FreightTableRepository
         $model = FreightTable::with(['routes.weightRanges', 'fees'])
             ->where('company_id', $companyId)
             ->find($id);
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
@@ -29,7 +32,7 @@ class EloquentFreightTableRepository implements FreightTableRepository
             ->where('company_id', $companyId)
             ->where('carrier_id', $carrierId)
             ->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -41,11 +44,14 @@ class EloquentFreightTableRepository implements FreightTableRepository
             ->where('status', 'Ativa')
             ->whereHas('routes', function ($q) use ($destCity, $destState) {
                 $q->where('destination_city', 'like', $destCity)
-                  ->where('destination_uf', $destState);
+                    ->where('destination_uf', $destState);
             })
             ->first();
 
-        if (!$table) return null;
+        if (! $table) {
+            return null;
+        }
+
         return $this->toEntity($table);
     }
 
@@ -54,15 +60,15 @@ class EloquentFreightTableRepository implements FreightTableRepository
         $query = FreightTable::with(['routes.weightRanges', 'fees'])
             ->where('company_id', $companyId);
 
-        if (!empty($filters['carrier_id'])) {
+        if (! empty($filters['carrier_id'])) {
             $query->where('carrier_id', $filters['carrier_id']);
         }
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
         return $query->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -74,7 +80,7 @@ class EloquentFreightTableRepository implements FreightTableRepository
             FreightTable::updateOrCreate(
                 ['id' => $id],
                 [
-                                    'id' => $id,
+                    'id' => $id,
                     'company_id' => $table->companyId,
                     'carrier_id' => $table->carrierId,
                     'name' => $table->name,
@@ -89,9 +95,9 @@ class EloquentFreightTableRepository implements FreightTableRepository
             $carrier = Carrier::find($table->carrierId);
             $originUf = $carrier->origin_uf ?? 'SP';
 
-            if (!empty($table->routes)) {
+            if (! empty($table->routes)) {
                 FreightTableRoute::where('freight_table_id', $id)->delete();
-                FreightTableWeightRange::whereHas('route', fn($q) => $q->where('freight_table_id', $id))->delete();
+                FreightTableWeightRange::whereHas('route', fn ($q) => $q->where('freight_table_id', $id))->delete();
 
                 foreach ($table->routes as $idx => $route) {
                     $routeModel = FreightTableRoute::create([
@@ -118,7 +124,7 @@ class EloquentFreightTableRepository implements FreightTableRepository
                 }
             }
 
-            if (!empty($table->fees)) {
+            if (! empty($table->fees)) {
                 FreightTableFee::where('freight_table_id', $id)->delete();
 
                 foreach ($table->fees as $fee) {

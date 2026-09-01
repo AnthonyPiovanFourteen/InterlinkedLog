@@ -42,11 +42,11 @@ class ViaCepLookupService implements CepLookupService
             $response = Http::timeout(5)->get("https://viacep.com.br/ws/{$cep}/json/");
 
             if ($response->failed()) {
-                throw new CepLookupUnavailableException();
+                throw new CepLookupUnavailableException;
             }
 
             $data = $response->json();
-            if (!is_array($data) || !empty($data['erro'])) {
+            if (! is_array($data) || ! empty($data['erro'])) {
                 return null;
             }
 

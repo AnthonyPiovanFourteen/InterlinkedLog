@@ -17,10 +17,10 @@ class FreightTableTenancyTest extends ApiTestCase
             ->json('data');
         $this->assertSame([], $tablesB);
 
-        $this->getJson('/api/v1/freight-tables/' . $tableA['id'], $this->authHeaders($tenantB['token']))
+        $this->getJson('/api/v1/freight-tables/'.$tableA['id'], $this->authHeaders($tenantB['token']))
             ->assertStatus(404);
 
-        $this->getJson('/api/v1/freight-tables/' . $tableA['id'], $this->authHeaders())
+        $this->getJson('/api/v1/freight-tables/'.$tableA['id'], $this->authHeaders())
             ->assertOk();
     }
 
@@ -46,11 +46,11 @@ class FreightTableTenancyTest extends ApiTestCase
         );
 
         $quotationA = $this->createQuotation();
-        $resultA = collect($quotationA['results'])->first(fn($r) => $r['carrier_id'] === $carrier['id']);
+        $resultA = collect($quotationA['results'])->first(fn ($r) => $r['carrier_id'] === $carrier['id']);
         $this->assertSame(150, $resultA['freight_value']);
 
         $quotationB = $this->createQuotation($tenantB['token']);
-        $resultB = collect($quotationB['results'])->first(fn($r) => $r['carrier_id'] === $carrier['id']);
+        $resultB = collect($quotationB['results'])->first(fn ($r) => $r['carrier_id'] === $carrier['id']);
         $this->assertSame(1, $resultB['freight_value']);
     }
 }

@@ -59,7 +59,7 @@ class QuotationEngineTest extends TestCase
         string $carrierId = 'carrier-1',
     ): FreightTableEntity {
         return new FreightTableEntity(
-            id: 'table-' . $carrierId,
+            id: 'table-'.$carrierId,
             companyId: self::COMPANY,
             name: 'Tabela',
             carrierId: $carrierId,
@@ -207,7 +207,7 @@ class QuotationEngineTest extends TestCase
         ];
         $engine = $this->engine(
             $carriers,
-            fn($companyId, $carrierId) => $this->table([$this->route('Londrina', 2, [
+            fn ($companyId, $carrierId) => $this->table([$this->route('Londrina', 2, [
                 ['start' => 0, 'end' => 100, 'value' => match ($carrierId) {
                     'carrier-1' => 300,
                     'carrier-2' => 200,
@@ -231,12 +231,12 @@ class QuotationEngineTest extends TestCase
             $this->carrier('carrier-1', 'Igual A'),
             $this->carrier('carrier-2', 'Igual B'),
         ];
-        $engine = $this->engine($carriers, fn() => $this->table([$this->route()]));
+        $engine = $this->engine($carriers, fn () => $this->table([$this->route()]));
 
         $results = $engine->process($this->quotation());
 
         $this->assertCount(2, $results);
-        $this->assertCount(1, collect($results)->filter(fn($r) => ($r['best_price'] ?? false) === true));
+        $this->assertCount(1, collect($results)->filter(fn ($r) => ($r['best_price'] ?? false) === true));
     }
 
     public function test_process_without_carriers_returns_empty(): void

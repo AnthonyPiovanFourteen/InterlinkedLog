@@ -13,7 +13,7 @@ class EloquentAuditLogRepository implements AuditLogRepository
     {
         return AuditLog::where('company_id', $companyId)
             ->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -23,7 +23,7 @@ class EloquentAuditLogRepository implements AuditLogRepository
         AuditLog::updateOrCreate(
             ['id' => $id],
             [
-                                'id' => $id,
+                'id' => $id,
                 'company_id' => $log->companyId,
                 'user_id' => $log->userId,
                 'user_name' => $log->userName,

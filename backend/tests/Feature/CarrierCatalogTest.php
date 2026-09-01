@@ -18,7 +18,7 @@ class CarrierCatalogTest extends ApiTestCase
 
         $quotation = $this->createQuotation();
 
-        $result = collect($quotation['results'])->first(fn($r) => $r['carrier_id'] === $carrier['id']);
+        $result = collect($quotation['results'])->first(fn ($r) => $r['carrier_id'] === $carrier['id']);
         $this->assertNotNull($result, 'A transportadora criada via API deveria aparecer na cotação');
         $this->assertSame(150, $result['freight_value']);
     }
@@ -35,7 +35,7 @@ class CarrierCatalogTest extends ApiTestCase
             ->assertOk()
             ->json('data');
 
-        $this->assertTrue(collect($carriersA)->contains(fn($c) => $c['id'] === $carrierB['id']));
+        $this->assertTrue(collect($carriersA)->contains(fn ($c) => $c['id'] === $carrierB['id']));
     }
 
     public function test_non_admin_user_cannot_create_or_alter_carriers(): void
@@ -56,11 +56,11 @@ class CarrierCatalogTest extends ApiTestCase
 
         $carrier = $this->createCarrier();
 
-        $this->patchJson('/api/v1/carriers/' . $carrier['id'], [
+        $this->patchJson('/api/v1/carriers/'.$carrier['id'], [
             'name' => 'Tentativa',
         ], $this->authHeaders($userToken))->assertStatus(403);
 
-        $this->deleteJson('/api/v1/carriers/' . $carrier['id'], [], $this->authHeaders($userToken))
+        $this->deleteJson('/api/v1/carriers/'.$carrier['id'], [], $this->authHeaders($userToken))
             ->assertStatus(403);
 
         $this->assertDatabaseHas('carriers', ['id' => $carrier['id']]);

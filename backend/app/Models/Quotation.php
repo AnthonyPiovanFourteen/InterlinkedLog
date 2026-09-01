@@ -3,16 +3,19 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantScoped;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\QuotationResult> $results
+ * @property-read Collection<int, QuotationResult> $results
  */
 class Quotation extends Model
 {
     use TenantScoped;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -42,7 +45,7 @@ class Quotation extends Model
         ];
     }
 
-    public function results(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function results(): HasMany
     {
         return $this->hasMany(QuotationResult::class);
     }

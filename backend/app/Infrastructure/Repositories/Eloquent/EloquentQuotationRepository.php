@@ -14,14 +14,20 @@ class EloquentQuotationRepository implements QuotationRepository
     public function findById(string $id): ?QuotationEntity
     {
         $model = Quotation::with('results')->find($id);
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
     public function findByIdForUpdate(string $id): ?QuotationEntity
     {
         $model = Quotation::with('results')->whereKey($id)->lockForUpdate()->first();
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
@@ -29,19 +35,19 @@ class EloquentQuotationRepository implements QuotationRepository
     {
         $query = Quotation::with('results')->where('company_id', $companyId);
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {
                 $q->where('nf_number', 'like', "%{$search}%")
-                  ->orWhere('destination_city', 'like', "%{$search}%");
+                    ->orWhere('destination_city', 'like', "%{$search}%");
             });
         }
 
         return $query->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -53,7 +59,7 @@ class EloquentQuotationRepository implements QuotationRepository
             Quotation::updateOrCreate(
                 ['id' => $id],
                 [
-                                    'id' => $id,
+                    'id' => $id,
                     'company_id' => $quotation->companyId,
                     'user_id' => $quotation->userId,
                     'nf_number' => $quotation->nfNumber,
@@ -75,7 +81,7 @@ class EloquentQuotationRepository implements QuotationRepository
                 ]
             );
 
-            if (!empty($quotation->results)) {
+            if (! empty($quotation->results)) {
                 QuotationResult::where('quotation_id', $id)->delete();
 
                 foreach ($quotation->results as $result) {

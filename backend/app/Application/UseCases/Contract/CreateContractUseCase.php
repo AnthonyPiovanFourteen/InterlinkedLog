@@ -28,12 +28,12 @@ class CreateContractUseCase
         return $this->transactionManager->run(function () use ($quotationId, $carrierId, $companyId) {
             $quotation = $this->quotationRepository->findByIdForUpdate($quotationId);
 
-            if (!$quotation || $quotation->companyId !== $companyId) {
-                throw new QuotationNotFoundException();
+            if (! $quotation || $quotation->companyId !== $companyId) {
+                throw new QuotationNotFoundException;
             }
 
             if ($quotation->status !== Quotation::STATUS_VALID) {
-                throw new QuotationNotValidException();
+                throw new QuotationNotValidException;
             }
 
             $selectedResult = null;
@@ -44,13 +44,13 @@ class CreateContractUseCase
                 }
             }
 
-            if (!$selectedResult) {
-                throw new CarrierNotInResultsException();
+            if (! $selectedResult) {
+                throw new CarrierNotInResultsException;
             }
 
             $contract = Contract::fromQuotation(
                 id: Str::orderedUuid()->toString(),
-                documentNumber: 'CT-e ' . date('Ymd') . str_pad((string) rand(1, 9999), 4, '0', STR_PAD_LEFT),
+                documentNumber: 'CT-e '.date('Ymd').str_pad((string) rand(1, 9999), 4, '0', STR_PAD_LEFT),
                 companyId: $companyId,
                 quotationId: $quotation->id,
                 nfNumber: $quotation->nfNumber,

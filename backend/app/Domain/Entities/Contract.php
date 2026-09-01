@@ -5,11 +5,17 @@ namespace App\Domain\Entities;
 class Contract
 {
     public const STATUS_SCHEDULED = 'Agendado';
+
     public const STATUS_COLLECTED = 'Coletado';
+
     public const STATUS_IN_TRANSIT = 'Em Trânsito';
+
     public const STATUS_DISTRIBUTION = 'Unidade de Distribuição';
+
     public const STATUS_OUT_FOR_DELIVERY = 'Saiu para Entrega';
+
     public const STATUS_DELIVERED = 'Entregue';
+
     public const STATUS_CANCELLED = 'Cancelado';
 
     public function __construct(

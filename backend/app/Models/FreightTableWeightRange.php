@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @property-read \App\Models\FreightTableRoute $route
+ * @property-read FreightTableRoute $route
  */
 class FreightTableWeightRange extends Model
 {
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -28,7 +30,7 @@ class FreightTableWeightRange extends Model
         ];
     }
 
-    public function route(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function route(): BelongsTo
     {
         return $this->belongsTo(FreightTableRoute::class, 'freight_table_route_id');
     }

@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Concerns\TenantScoped;
 use App\Models\Company;
+use App\Models\Concerns\TenantScoped;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\Process\Process;
@@ -32,7 +32,7 @@ class ArchitectureTest extends TestCase
     public function test_domain_ports_are_interfaces(): void
     {
         foreach (glob(app_path('Domain/Repositories/*.php')) as $file) {
-            $class = 'App\\Domain\\Repositories\\' . basename($file, '.php');
+            $class = 'App\\Domain\\Repositories\\'.basename($file, '.php');
             $this->assertTrue(
                 (new \ReflectionClass($class))->isInterface(),
                 "{$class} deveria ser interface",
@@ -40,7 +40,7 @@ class ArchitectureTest extends TestCase
         }
 
         foreach (glob(app_path('Domain/Services/*.php')) as $file) {
-            $class = 'App\\Domain\\Services\\' . basename($file, '.php');
+            $class = 'App\\Domain\\Services\\'.basename($file, '.php');
             $this->assertTrue(
                 (new \ReflectionClass($class))->isInterface(),
                 "{$class} deveria ser interface",
@@ -51,12 +51,12 @@ class ArchitectureTest extends TestCase
     public function test_models_with_company_id_use_tenant_scope(): void
     {
         foreach (glob(app_path('Models/*.php')) as $file) {
-            $class = 'App\\Models\\' . basename($file, '.php');
+            $class = 'App\\Models\\'.basename($file, '.php');
             if ($class === Company::class) {
                 continue;
             }
             $table = (new $class)->getTable();
-            if (!Schema::hasColumn($table, 'company_id')) {
+            if (! Schema::hasColumn($table, 'company_id')) {
                 continue;
             }
             $this->assertTrue(

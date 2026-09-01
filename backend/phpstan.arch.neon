@@ -5,6 +5,7 @@ parameters:
     level: 0
     paths:
         - app
+        - tests/Arch
     tmpDir: storage/framework/cache/phpstan-arch
     phpat:
         show_rule_names: true

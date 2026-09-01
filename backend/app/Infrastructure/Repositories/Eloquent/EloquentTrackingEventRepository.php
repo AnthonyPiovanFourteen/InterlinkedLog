@@ -13,7 +13,7 @@ class EloquentTrackingEventRepository implements TrackingEventRepository
     {
         return TrackingEvent::where('contract_id', $contractId)
             ->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -23,7 +23,7 @@ class EloquentTrackingEventRepository implements TrackingEventRepository
         TrackingEvent::updateOrCreate(
             ['id' => $id],
             [
-                                'id' => $id,
+                'id' => $id,
                 'contract_id' => $event->contractId,
                 'title' => $event->title,
                 'date' => $event->date,

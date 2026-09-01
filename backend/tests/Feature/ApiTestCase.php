@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Company;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -14,12 +15,13 @@ abstract class ApiTestCase extends TestCase
     use RefreshDatabase;
 
     protected string $adminToken;
+
     protected string $adminCompanyId;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->app->instance('request', \Illuminate\Http\Request::create('/'));
+        $this->app->instance('request', Request::create('/'));
         Cache::flush();
         $this->seed();
 
@@ -35,14 +37,14 @@ abstract class ApiTestCase extends TestCase
 
     protected function authHeaders(?string $token = null): array
     {
-        return ['Authorization' => 'Bearer ' . ($token ?? $this->adminToken)];
+        return ['Authorization' => 'Bearer '.($token ?? $this->adminToken)];
     }
 
     protected function createTenant(string $email, string $name = 'Usuário Tenant'): array
     {
         $company = Company::create([
             'id' => Str::orderedUuid()->toString(),
-            'name' => 'Empresa ' . $name,
+            'name' => 'Empresa '.$name,
             'cnpj' => '99.999.999/0001-99',
             'type' => 'Enterprise',
         ]);
@@ -123,7 +125,7 @@ abstract class ApiTestCase extends TestCase
 
         $table = $response->json('data');
 
-        $this->patchJson('/api/v1/freight-tables/' . $table['id'], [
+        $this->patchJson('/api/v1/freight-tables/'.$table['id'], [
             'status' => 'Ativa',
         ], $this->authHeaders($token))->assertOk();
 

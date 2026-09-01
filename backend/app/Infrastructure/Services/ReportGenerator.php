@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Services;
 
+use App\Domain\Entities\Contract;
 use App\Domain\Repositories\ContractRepository;
 use App\Domain\Repositories\QuotationRepository;
 use App\Domain\Repositories\TrackingEventRepository;
@@ -37,7 +38,7 @@ class ReportGenerator implements ReportService
             $carrierCounts[$c->carrierName] = ($carrierCounts[$c->carrierName] ?? 0) + 1;
         }
 
-        $topCarrier = !empty($carrierCounts) ? array_keys($carrierCounts, max($carrierCounts))[0] : null;
+        $topCarrier = ! empty($carrierCounts) ? array_keys($carrierCounts, max($carrierCounts))[0] : null;
 
         $quotationsByStatus = [];
         foreach ($quotations as $q) {
@@ -91,10 +92,10 @@ class ReportGenerator implements ReportService
             'contracts_count' => count($contracts),
             'carrier_ranking' => array_values($carrierRanking),
             'top_routes' => array_slice(
-                array_map(fn($k, $v) => ['route' => $k, 'count' => $v], array_keys($routeUsage), $routeUsage),
+                array_map(fn ($k, $v) => ['route' => $k, 'count' => $v], array_keys($routeUsage), $routeUsage),
                 0, 10,
             ),
-            'by_carrier' => array_map(fn($c) => [
+            'by_carrier' => array_map(fn ($c) => [
                 'carrier' => $c->carrierName,
                 'count' => 1,
                 'value' => $c->finalValue,
@@ -134,7 +135,7 @@ class ReportGenerator implements ReportService
                 $daysTaken = (int) (new \DateTime($deliveredDate))->diff(new \DateTime($collectedDate))->days;
             } else {
                 $daysTaken = $contract->deadline;
-                if ($contract->status === \App\Domain\Entities\Contract::STATUS_DELIVERED) {
+                if ($contract->status === Contract::STATUS_DELIVERED) {
                     $daysTaken = $contract->deadline;
                 }
             }

@@ -32,7 +32,7 @@ class AuthController extends Controller
             $request->input('password'),
         );
 
-        if (!$result) {
+        if (! $result) {
             return response()->json(['message' => 'Credenciais inválidas'], 401);
         }
 
@@ -60,6 +60,7 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         $user = $request->attributes->get('auth_user');
+
         return response()->json($user);
     }
 }

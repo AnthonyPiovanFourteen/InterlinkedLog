@@ -5,9 +5,13 @@ namespace App\Domain\Entities;
 class Quotation
 {
     public const STATUS_DRAFT = 'RASCUNHO';
+
     public const STATUS_VALID = 'VALIDA';
+
     public const STATUS_EXPIRED = 'EXPIRADA';
+
     public const STATUS_CONTRACTED = 'CONTRATADA';
+
     public const STATUS_CANCELLED = 'CANCELADA';
 
     public function __construct(

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class QuotationResult extends Model
 {
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

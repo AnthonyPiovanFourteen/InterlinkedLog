@@ -12,14 +12,20 @@ class EloquentCompanyRepository implements CompanyRepository
     public function findById(string $id): ?CompanyEntity
     {
         $model = Company::find($id);
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
     public function findByCnpj(string $cnpj): ?CompanyEntity
     {
         $model = Company::where('cnpj', $cnpj)->first();
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
@@ -29,7 +35,7 @@ class EloquentCompanyRepository implements CompanyRepository
         Company::updateOrCreate(
             ['id' => $id],
             [
-                                'id' => $id,
+                'id' => $id,
                 'name' => $company->name,
                 'cnpj' => $company->cnpj,
                 'type' => $company->plan,

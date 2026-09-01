@@ -105,7 +105,7 @@ class SecurityFlowTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $this->withServerVariables([
                 'REMOTE_ADDR' => '10.9.9.9',
-                'HTTP_X_FORWARDED_FOR' => '1.1.1.' . ($i + 1),
+                'HTTP_X_FORWARDED_FOR' => '1.1.1.'.($i + 1),
             ])->postJson('/api/v1/login', [
                 'email' => 'admin@interlinked.io',
                 'password' => 'senha-errada',

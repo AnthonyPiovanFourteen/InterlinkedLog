@@ -21,9 +21,9 @@ class SystemLogController extends Controller
         $companyId = $request->attributes->get('company_id');
         $logs = $this->systemLogRepository->findByCompany($companyId);
 
-        usort($logs, fn(SystemLog $a, SystemLog $b) => $b->createdAt <=> $a->createdAt);
+        usort($logs, fn (SystemLog $a, SystemLog $b) => $b->createdAt <=> $a->createdAt);
 
-        $data = array_map(fn(SystemLog $l) => [
+        $data = array_map(fn (SystemLog $l) => [
             'id' => $l->id,
             'user_id' => $l->userId,
             'user_name' => $l->userName,

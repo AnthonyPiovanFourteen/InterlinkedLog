@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
 
 class ApiContractTest extends ApiTestCase
@@ -81,7 +80,7 @@ class ApiContractTest extends ApiTestCase
 
             $uri = preg_replace('/\{[^}]+\}/', '00000000-0000-0000-0000-000000000000', $route->uri());
 
-            $response = $this->call($method, '/' . $uri);
+            $response = $this->call($method, '/'.$uri);
             $this->assertSame(
                 401,
                 $response->getStatusCode(),

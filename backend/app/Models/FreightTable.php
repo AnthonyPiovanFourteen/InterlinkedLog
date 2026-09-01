@@ -3,18 +3,22 @@
 namespace App\Models;
 
 use App\Models\Concerns\TenantScoped;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property-read \App\Models\Carrier $carrier
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FreightTableRoute> $routes
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\FreightTableFee> $fees
+ * @property-read Carrier $carrier
+ * @property-read Collection<int, FreightTableRoute> $routes
+ * @property-read Collection<int, FreightTableFee> $fees
  */
 class FreightTable extends Model
 {
     use TenantScoped;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [
@@ -34,17 +38,17 @@ class FreightTable extends Model
         ];
     }
 
-    public function carrier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function carrier(): BelongsTo
     {
         return $this->belongsTo(Carrier::class);
     }
 
-    public function routes(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function routes(): HasMany
     {
         return $this->hasMany(FreightTableRoute::class);
     }
 
-    public function fees(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function fees(): HasMany
     {
         return $this->hasMany(FreightTableFee::class);
     }

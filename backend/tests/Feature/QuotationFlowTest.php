@@ -21,7 +21,7 @@ class QuotationFlowTest extends ApiTestCase
             $this->assertSame(3, $result['deadline']);
         }
 
-        $bestPrice = collect($quotation['results'])->filter(fn($r) => ($r['best_price'] ?? false) === true);
+        $bestPrice = collect($quotation['results'])->filter(fn ($r) => ($r['best_price'] ?? false) === true);
         $this->assertCount(1, $bestPrice);
     }
 
@@ -42,7 +42,7 @@ class QuotationFlowTest extends ApiTestCase
 
         $routes = FreightTableRoute::whereHas(
             'freightTable',
-            fn($q) => $q->where('carrier_id', $carrier['id']),
+            fn ($q) => $q->where('carrier_id', $carrier['id']),
         )->get();
 
         $londrina = $routes->firstWhere('destination_city', 'Londrina');
@@ -58,12 +58,12 @@ class QuotationFlowTest extends ApiTestCase
         $curitibaRanges[1]->update(['freight_value' => 600, 'deadline_days' => 9]);
 
         $toLondrina = $this->createQuotation(null, ['destination_cep' => '86020-000']);
-        $londrinaResult = collect($toLondrina['results'])->first(fn($r) => $r['carrier_id'] === $carrier['id']);
+        $londrinaResult = collect($toLondrina['results'])->first(fn ($r) => $r['carrier_id'] === $carrier['id']);
         $this->assertSame(200, $londrinaResult['freight_value']);
         $this->assertSame(5, $londrinaResult['deadline']);
 
         $toCuritiba = $this->createQuotation(null, ['destination_cep' => '80000-000']);
-        $curitibaResult = collect($toCuritiba['results'])->first(fn($r) => $r['carrier_id'] === $carrier['id']);
+        $curitibaResult = collect($toCuritiba['results'])->first(fn ($r) => $r['carrier_id'] === $carrier['id']);
         $this->assertSame(600, $curitibaResult['freight_value']);
         $this->assertSame(9, $curitibaResult['deadline']);
     }
@@ -80,11 +80,11 @@ class QuotationFlowTest extends ApiTestCase
         ]);
 
         $quotation = $this->createQuotation(null, ['cargo_value' => 1000]);
-        $result = collect($quotation['results'])->first(fn($r) => $r['carrier_id'] === $carrier['id']);
+        $result = collect($quotation['results'])->first(fn ($r) => $r['carrier_id'] === $carrier['id']);
 
         $this->assertSame(125, $result['fees']);
 
-        $adValorem = collect($result['fees_breakdown'])->first(fn($b) => $b['type'] === 'ad_valorem');
+        $adValorem = collect($result['fees_breakdown'])->first(fn ($b) => $b['type'] === 'ad_valorem');
         $this->assertSame(100, $adValorem['amount']);
     }
 

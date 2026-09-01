@@ -5,6 +5,7 @@ namespace App\Domain\Entities;
 class Role
 {
     public const ADMIN = 'Admin';
+
     public const USUARIO = 'Usuário';
 
     public static function all(): array

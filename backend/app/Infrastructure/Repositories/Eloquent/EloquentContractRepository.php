@@ -12,7 +12,10 @@ class EloquentContractRepository implements ContractRepository
     public function findById(string $id): ?ContractEntity
     {
         $model = Contract::find($id);
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
@@ -20,15 +23,15 @@ class EloquentContractRepository implements ContractRepository
     {
         $query = Contract::where('company_id', $companyId);
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
-        if (!empty($filters['carrier_id'])) {
+        if (! empty($filters['carrier_id'])) {
             $query->where('carrier_id', $filters['carrier_id']);
         }
 
         return $query->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -38,7 +41,7 @@ class EloquentContractRepository implements ContractRepository
         Contract::updateOrCreate(
             ['id' => $id],
             [
-                                'id' => $id,
+                'id' => $id,
                 'company_id' => $contract->companyId,
                 'quotation_id' => $contract->quotationId,
                 'carrier_id' => $contract->carrierId,

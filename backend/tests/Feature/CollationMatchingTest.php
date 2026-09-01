@@ -39,7 +39,7 @@ class CollationMatchingTest extends ApiTestCase
 
     private function resultForCarrier(array $results, string $carrierId): ?array
     {
-        return collect($results)->first(fn($r) => $r['carrier_id'] === $carrierId);
+        return collect($results)->first(fn ($r) => $r['carrier_id'] === $carrierId);
     }
 
     public function test_exact_accented_city_matches_in_any_database(): void

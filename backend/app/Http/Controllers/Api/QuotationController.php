@@ -25,12 +25,16 @@ class QuotationController extends Controller
         $companyId = $request->attributes->get('company_id');
         $filters = [];
 
-        if ($request->has('status')) $filters['status'] = $request->input('status');
-        if ($request->has('search')) $filters['search'] = $request->input('search');
+        if ($request->has('status')) {
+            $filters['status'] = $request->input('status');
+        }
+        if ($request->has('search')) {
+            $filters['search'] = $request->input('search');
+        }
 
         $quotations = $this->repository->findByCompany($companyId, $filters);
 
-        $data = array_map(fn(Quotation $q) => [
+        $data = array_map(fn (Quotation $q) => [
             'id' => $q->id,
             'nf_number' => $q->nfNumber,
             'destination_city' => $q->destinationCity,
@@ -39,7 +43,7 @@ class QuotationController extends Controller
             'cargo_value' => $q->cargoValue,
             'status' => $q->status,
             'results_count' => count($q->results),
-            'best_value' => !empty($q->results) ? collect($q->results)->min('final_value') : null,
+            'best_value' => ! empty($q->results) ? collect($q->results)->min('final_value') : null,
             'valid_until' => $q->validUntil,
             'created_at' => $q->createdAt,
         ], $quotations);
@@ -131,7 +135,7 @@ class QuotationController extends Controller
         $companyId = $request->attributes->get('company_id');
         $quotation = $this->repository->findById($id);
 
-        if (!$quotation || $quotation->companyId !== $companyId) {
+        if (! $quotation || $quotation->companyId !== $companyId) {
             return response()->json(['message' => 'Cotação não encontrada'], 404);
         }
 
@@ -159,11 +163,11 @@ class QuotationController extends Controller
         $companyId = $request->attributes->get('company_id');
         $quotation = $this->repository->findById($id);
 
-        if (!$quotation || $quotation->companyId !== $companyId) {
+        if (! $quotation || $quotation->companyId !== $companyId) {
             return response()->json(['message' => 'Cotação não encontrada'], 404);
         }
 
-        if (!in_array($quotation->status, [Quotation::STATUS_VALID, Quotation::STATUS_DRAFT])) {
+        if (! in_array($quotation->status, [Quotation::STATUS_VALID, Quotation::STATUS_DRAFT])) {
             return response()->json(['message' => 'Cotação não pode ser cancelada'], 422);
         }
 
@@ -191,32 +195,35 @@ class QuotationController extends Controller
     public function parseXml(Request $request): JsonResponse
     {
         $file = $request->file('xml');
-        if (!$file || !$file->isValid()) {
+        if (! $file || ! $file->isValid()) {
             return response()->json(['message' => 'Arquivo XML inválido'], 422);
         }
 
         $xml = simplexml_load_file($file->getPathname());
-        if (!$xml) {
+        if (! $xml) {
             return response()->json(['message' => 'XML malformado'], 422);
         }
 
         $ns = $xml->getNamespaces(true);
         $nfe = $xml->NFe ?? $xml->children($ns[''] ?? '')->NFe ?? null;
-        if (!$nfe || !$nfe->count()) {
+        if (! $nfe || ! $nfe->count()) {
             return response()->json(['message' => 'XML não é uma NF-e válida'], 422);
         }
         $infNFe = $nfe->infNFe ?? $nfe->children($ns[''] ?? '')->infNFe ?? null;
-        if (!$infNFe || !$infNFe->count()) {
+        if (! $infNFe || ! $infNFe->count()) {
             return response()->json(['message' => 'NF-e sem infNFe'], 422);
         }
 
-        $extract = function(string $path) use ($infNFe) {
+        $extract = function (string $path) use ($infNFe) {
             $parts = explode('/', $path);
             $node = $infNFe;
             foreach ($parts as $part) {
                 $node = $node->{$part} ?? null;
-                if (!$node) return null;
+                if (! $node) {
+                    return null;
+                }
             }
+
             return (string) $node;
         };
 

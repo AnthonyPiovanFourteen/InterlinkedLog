@@ -10,6 +10,7 @@ class Contract extends Model
     use TenantScoped;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     protected $fillable = [

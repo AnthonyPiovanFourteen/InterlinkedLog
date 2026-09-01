@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ForceJsonResponse
@@ -11,7 +12,7 @@ class ForceJsonResponse
     {
         $response = $next($request);
 
-        if ($response instanceof \Illuminate\Http\JsonResponse) {
+        if ($response instanceof JsonResponse) {
             $response->setEncodingOptions(
                 $response->getEncodingOptions() | JSON_UNESCAPED_UNICODE
             );

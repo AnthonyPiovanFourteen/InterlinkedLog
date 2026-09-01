@@ -18,12 +18,16 @@ class FreightTableController extends Controller
     {
         $companyId = $request->attributes->get('company_id');
         $filters = [];
-        if ($request->has('carrier_id')) $filters['carrier_id'] = $request->input('carrier_id');
-        if ($request->has('status')) $filters['status'] = $request->input('status');
+        if ($request->has('carrier_id')) {
+            $filters['carrier_id'] = $request->input('carrier_id');
+        }
+        if ($request->has('status')) {
+            $filters['status'] = $request->input('status');
+        }
 
         $tables = $this->repository->findAll($companyId, $filters);
 
-        $data = array_map(fn(FreightTable $t) => [
+        $data = array_map(fn (FreightTable $t) => [
             'id' => $t->id,
             'name' => $t->name,
             'carrier_id' => $t->carrierId,
@@ -83,7 +87,7 @@ class FreightTableController extends Controller
             validityStart: $table->validityStart, validityEnd: $table->validityEnd,
             status: $table->status,
             routes: array_map(
-                fn($r) => array_merge($r, ['weightRanges' => $request->input('weight_ranges', [])]),
+                fn ($r) => array_merge($r, ['weightRanges' => $request->input('weight_ranges', [])]),
                 $request->input('routes', []),
             ),
             fees: $request->input('fees', []),
@@ -98,7 +102,9 @@ class FreightTableController extends Controller
     {
         $companyId = $request->attributes->get('company_id');
         $table = $this->repository->findById($companyId, $id);
-        if (!$table) return response()->json(['message' => 'Tabela não encontrada'], 404);
+        if (! $table) {
+            return response()->json(['message' => 'Tabela não encontrada'], 404);
+        }
 
         return response()->json([
             'data' => [
@@ -117,7 +123,9 @@ class FreightTableController extends Controller
     {
         $companyId = $request->attributes->get('company_id');
         $table = $this->repository->findById($companyId, $id);
-        if (!$table) return response()->json(['message' => 'Tabela não encontrada'], 404);
+        if (! $table) {
+            return response()->json(['message' => 'Tabela não encontrada'], 404);
+        }
 
         $weightRanges = $request->input('weight_ranges');
         $routes = array_map(function ($r) use ($weightRanges, $table) {
@@ -127,6 +135,7 @@ class FreightTableController extends Controller
             if (isset($r['weightRanges'])) {
                 return $r;
             }
+
             return array_merge($r, ['weightRanges' => $table->routes[0]['weightRanges'] ?? []]);
         }, $request->input('routes', $table->routes));
 
@@ -153,10 +162,11 @@ class FreightTableController extends Controller
     public function destroy(Request $request, string $id): JsonResponse
     {
         $companyId = $request->attributes->get('company_id');
-        if (!$this->repository->findById($companyId, $id)) {
+        if (! $this->repository->findById($companyId, $id)) {
             return response()->json(['message' => 'Tabela não encontrada'], 404);
         }
         $this->repository->delete($companyId, $id);
+
         return response()->json(['message' => 'Tabela removida']);
     }
 }

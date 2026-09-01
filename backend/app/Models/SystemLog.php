@@ -13,6 +13,7 @@ class SystemLog extends Model
     use TenantScoped;
 
     public $incrementing = false;
+
     protected $keyType = 'string';
 
     public $timestamps = false;

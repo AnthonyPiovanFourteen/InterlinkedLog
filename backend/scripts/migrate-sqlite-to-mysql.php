@@ -20,13 +20,13 @@
 
 $force = in_array('--force', $argv, true);
 
-$sqlitePath = getenv('DB_SQLITE_PATH') ?: __DIR__ . '/../database/database.sqlite';
-if (!is_file($sqlitePath)) {
+$sqlitePath = getenv('DB_SQLITE_PATH') ?: __DIR__.'/../database/database.sqlite';
+if (! is_file($sqlitePath)) {
     fwrite(STDERR, "ERRO: arquivo SQLite não encontrado em {$sqlitePath}\n");
     exit(1);
 }
 
-$sqlite = new PDO('sqlite:' . $sqlitePath);
+$sqlite = new PDO('sqlite:'.$sqlitePath);
 $sqlite->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 $sqlite->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
@@ -64,14 +64,16 @@ foreach ($tables as $table) {
     $sourceCount = (int) $sqlite->query("SELECT COUNT(*) FROM {$table}")->fetchColumn();
     $targetCount = (int) $mysql->query("SELECT COUNT(*) FROM `{$table}`")->fetchColumn();
 
-    if (!$force && $targetCount === $sourceCount && $sourceCount > 0) {
+    if (! $force && $targetCount === $sourceCount && $sourceCount > 0) {
         echo "SKIP  {$table}: já migrada ({$targetCount} registros)\n";
+
         continue;
     }
 
-    if ($targetCount > 0 && !$force) {
+    if ($targetCount > 0 && ! $force) {
         fwrite(STDERR, "ABORTAR: {$table} tem {$targetCount} registros no MySQL e a origem tem {$sourceCount}. Use --force para truncar e recopiar.\n");
         $failed = true;
+
         continue;
     }
 
@@ -89,10 +91,11 @@ foreach ($tables as $table) {
     if ($columns === []) {
         fwrite(STDERR, "ABORTAR: não foi possível ler as colunas de {$table}\n");
         $failed = true;
+
         continue;
     }
 
-    $colList = '`' . implode('`, `', $columns) . '`';
+    $colList = '`'.implode('`, `', $columns).'`';
     $placeholders = implode(', ', array_fill(0, count($columns), '?'));
     $insert = $mysql->prepare("INSERT INTO `{$table}` ({$colList}) VALUES ({$placeholders})");
 
@@ -107,6 +110,7 @@ foreach ($tables as $table) {
     if ($finalCount !== $sourceCount) {
         fwrite(STDERR, "ABORTAR: {$table} — origem {$sourceCount}, destino após cópia {$finalCount}\n");
         $failed = true;
+
         continue;
     }
 

@@ -11,7 +11,7 @@ class TenantMiddleware
     {
         $companyId = $request->attributes->get('company_id');
 
-        if (!$companyId) {
+        if (! $companyId) {
             return response()->json(['message' => 'Empresa não identificada'], 403);
         }
 

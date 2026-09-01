@@ -30,11 +30,11 @@ class ContractFlowTest extends ApiTestCase
         ]);
         $this->assertSame(1, Contract::where('quotation_id', $quotation['id'])->count());
 
-        $this->getJson('/api/v1/quotations/' . $quotation['id'], $this->authHeaders())
+        $this->getJson('/api/v1/quotations/'.$quotation['id'], $this->authHeaders())
             ->assertOk()
             ->assertJsonPath('data.status', 'CONTRATADA');
 
-        $events = $this->getJson('/api/v1/tracking/' . $contractId, $this->authHeaders())
+        $events = $this->getJson('/api/v1/tracking/'.$contractId, $this->authHeaders())
             ->assertOk()
             ->json('data');
 
@@ -92,7 +92,7 @@ class ContractFlowTest extends ApiTestCase
             ->json('data');
 
         $this->assertCount(1, $contractsA);
-        $this->assertSame('OC-' . date('Ymd') . '-0001', $contractsA[0]['document_number']);
+        $this->assertSame('OC-'.date('Ymd').'-0001', $contractsA[0]['document_number']);
 
         $tenantB = $this->createTenant('b@interlinked.io');
         $contractsB = $this->getJson('/api/v1/contracts', $this->authHeaders($tenantB['token']))

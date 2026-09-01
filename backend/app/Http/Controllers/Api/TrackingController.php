@@ -28,6 +28,7 @@ class TrackingController extends Controller
 
         $data = array_map(function (Contract $c) {
             $events = $this->trackingRepository->findByContract($c->id);
+
             return [
                 'contract_id' => $c->id,
                 'nf_number' => $c->nfNumber,
@@ -36,7 +37,7 @@ class TrackingController extends Controller
                 'destination_city' => $c->destinationCity,
                 'status' => $c->status,
                 'deadline' => $c->deadline,
-                'events' => array_map(fn(TrackingEvent $e) => [
+                'events' => array_map(fn (TrackingEvent $e) => [
                     'id' => $e->id, 'title' => $e->title,
                     'date' => $e->date, 'time' => $e->time,
                     'observation' => $e->observation,
@@ -52,13 +53,13 @@ class TrackingController extends Controller
         $companyId = $request->attributes->get('company_id');
         $contract = $this->contractRepository->findById($contractId);
 
-        if (!$contract || $contract->companyId !== $companyId) {
+        if (! $contract || $contract->companyId !== $companyId) {
             return response()->json(['message' => 'Contratação não encontrada'], 404);
         }
 
         $events = $this->trackingRepository->findByContract($contractId);
 
-        $data = array_map(fn(TrackingEvent $e) => [
+        $data = array_map(fn (TrackingEvent $e) => [
             'id' => $e->id, 'title' => $e->title,
             'date' => $e->date, 'time' => $e->time,
             'observation' => $e->observation,
@@ -73,7 +74,7 @@ class TrackingController extends Controller
         $companyId = $request->attributes->get('company_id');
         $contract = $this->contractRepository->findById($contractId);
 
-        if (!$contract || $contract->companyId !== $companyId) {
+        if (! $contract || $contract->companyId !== $companyId) {
             return response()->json(['message' => 'Contratação não encontrada'], 404);
         }
 

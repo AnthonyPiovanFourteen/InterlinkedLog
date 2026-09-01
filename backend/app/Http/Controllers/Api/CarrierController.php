@@ -29,7 +29,7 @@ class CarrierController extends Controller
     public function index(): JsonResponse
     {
         $carriers = $this->repository->findAll();
-        $data = array_map(fn(Carrier $c) => [
+        $data = array_map(fn (Carrier $c) => [
             'id' => $c->id,
             'name' => $c->name,
             'cnpj' => $c->cnpj,
@@ -46,7 +46,7 @@ class CarrierController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        if (!$this->isAdmin($request)) {
+        if (! $this->isAdmin($request)) {
             return $this->adminDenied();
         }
 
@@ -83,7 +83,9 @@ class CarrierController extends Controller
     public function show(string $id): JsonResponse
     {
         $carrier = $this->repository->findById($id);
-        if (!$carrier) return response()->json(['message' => 'Transportadora não encontrada'], 404);
+        if (! $carrier) {
+            return response()->json(['message' => 'Transportadora não encontrada'], 404);
+        }
 
         return response()->json(['data' => [
             'id' => $carrier->id, 'name' => $carrier->name, 'cnpj' => $carrier->cnpj,
@@ -95,18 +97,20 @@ class CarrierController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
-        if (!$this->isAdmin($request)) {
+        if (! $this->isAdmin($request)) {
             return $this->adminDenied();
         }
 
         $carrier = $this->repository->findById($id);
-        if (!$carrier) return response()->json(['message' => 'Transportadora não encontrada'], 404);
+        if (! $carrier) {
+            return response()->json(['message' => 'Transportadora não encontrada'], 404);
+        }
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
             'origin_city' => 'sometimes|string|max:255',
             'origin_state' => 'sometimes|string|size:2',
-            'status' => 'sometimes|string|in:' . implode(',', CarrierStatus::all()),
+            'status' => 'sometimes|string|in:'.implode(',', CarrierStatus::all()),
             'contact_name' => 'nullable|string|max:255',
             'contact_phone' => 'nullable|string|max:20',
             'contact_email' => 'nullable|email',
@@ -135,14 +139,15 @@ class CarrierController extends Controller
 
     public function destroy(Request $request, string $id): JsonResponse
     {
-        if (!$this->isAdmin($request)) {
+        if (! $this->isAdmin($request)) {
             return $this->adminDenied();
         }
 
-        if (!$this->repository->findById($id)) {
+        if (! $this->repository->findById($id)) {
             return response()->json(['message' => 'Transportadora não encontrada'], 404);
         }
         $this->repository->delete($id);
+
         return response()->json(['message' => 'Transportadora removida']);
     }
 }

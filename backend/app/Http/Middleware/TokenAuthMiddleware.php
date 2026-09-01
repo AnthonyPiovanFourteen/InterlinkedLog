@@ -14,13 +14,13 @@ class TokenAuthMiddleware
     {
         $token = $request->bearerToken();
 
-        if (!$token) {
+        if (! $token) {
             return response()->json(['message' => 'Token não informado'], 401);
         }
 
         $user = $this->authService->validateToken($token);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['message' => 'Token inválido ou expirado'], 401);
         }
 

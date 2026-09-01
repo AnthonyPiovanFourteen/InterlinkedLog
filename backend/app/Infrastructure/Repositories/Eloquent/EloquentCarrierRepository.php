@@ -13,14 +13,17 @@ class EloquentCarrierRepository implements CarrierRepository
     public function findById(string $id): ?CarrierEntity
     {
         $model = Carrier::find($id);
-        if (!$model) return null;
+        if (! $model) {
+            return null;
+        }
+
         return $this->toEntity($model);
     }
 
     public function findAll(): array
     {
         return Carrier::all()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -30,7 +33,7 @@ class EloquentCarrierRepository implements CarrierRepository
             ->where('origin_city', 'like', $city)
             ->where('origin_uf', $state)
             ->get()
-            ->map(fn($m) => $this->toEntity($m))
+            ->map(fn ($m) => $this->toEntity($m))
             ->all();
     }
 
@@ -40,7 +43,7 @@ class EloquentCarrierRepository implements CarrierRepository
         Carrier::updateOrCreate(
             ['id' => $id],
             [
-                                'id' => $id,
+                'id' => $id,
                 'name' => $carrier->name,
                 'cnpj' => $carrier->cnpj,
                 'origin_city' => $carrier->originCity,
