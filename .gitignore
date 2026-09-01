@@ -109,6 +109,5 @@ Desktop.ini
 # Lock files de outros gerenciadores
 # ══════════════════════════════════════════════
 package-lock.json
-composer.lock
 composer.phar
 backend/test-api.sh
