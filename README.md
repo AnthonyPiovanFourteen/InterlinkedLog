@@ -271,7 +271,8 @@ entrada inválida do usuário; 503 é indisponibilidade de infraestrutura.
 - **Dependências novas no backend (`composer.json`):** o serviço `test` usa o `vendor` da imagem
   (volume anônimo) — toda mudança em `composer.json` exige `docker compose build test` antes de
   `docker compose run --rm test`. No CI, a análise estática instala deps do commit, não de imagem
-  cacheada.
+  cacheada. O `composer.lock` é versionado: atualizar dependências é `composer update` deliberado,
+  com o lock no diff (o Dockerfile instala a partir do lock).
 - **`APP_DEBUG=false` e `APP_ENV=production` por padrão** no compose;
   sobrescreva com `APP_DEBUG=true`/`APP_ENV=local` no `.env` da raiz para
   desenvolvimento.
