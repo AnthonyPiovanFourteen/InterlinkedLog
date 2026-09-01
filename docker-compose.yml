@@ -70,7 +70,7 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    command: sh -c "mkdir -p storage/framework/views storage/framework/cache/data storage/framework/sessions storage/logs bootstrap/cache && touch .env && php artisan test"
+    command: sh -c "touch .env && php artisan test"
 
   frontend:
     build: .

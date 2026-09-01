@@ -18,15 +18,12 @@ dist-ssr/
 # ══════════════════════════════════════════════
 # Logs
 # ══════════════════════════════════════════════
-logs/
+/logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 lerna-debug.log*
-/storage/logs/
-backend/storage/logs/
-
 # ══════════════════════════════════════════════
 # Ambiente / Secrets
 # ══════════════════════════════════════════════
@@ -63,15 +60,6 @@ backend/bootstrap/cache/*
 # ══════════════════════════════════════════════
 # Uploads locais
 # ══════════════════════════════════════════════
-storage/app/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/testing/*
-storage/framework/views/*
-backend/storage/app/*
-backend/storage/framework/*
-backend/storage/data/*
-
 # ══════════════════════════════════════════════
 # Cloudflare / Wrangler
 # ══════════════════════════════════════════════
