@@ -57,21 +57,29 @@ class ApiContractTest extends ApiTestCase
             ]);
     }
 
-    public function test_every_authenticated_route_requires_token(): void
+    public function test_every_api_route_requires_token(): void
     {
+        // Allowlist explícita e nomeada: rotas legítimas sem autenticação.
+        // Rota nova fora do grupo autenticado quebra o teste até alguém
+        // declará-la conscientemente como pública.
+        $public = [
+            'POST api/v1/login',
+            'GET up',
+            'GET storage/{path}', // assets públicos (storage:link) — responde 403/404 sem token
+        ];
+
         /** @var Router $router */
         $router = app(Router::class);
         $tested = 0;
 
         foreach ($router->getRoutes()->getRoutes() as $route) {
-            /** @var Route $route */
-            $middleware = $route->gatherMiddleware();
-            if (!in_array('auth.token', $middleware, true)) {
+            $method = $route->methods()[0];
+
+            if (in_array("{$method} {$route->uri()}", $public, true)) {
                 continue;
             }
 
             $uri = preg_replace('/\{[^}]+\}/', '00000000-0000-0000-0000-000000000000', $route->uri());
-            $method = $route->methods()[0];
 
             $response = $this->call($method, '/' . $uri);
             $this->assertSame(
@@ -82,6 +90,10 @@ class ApiContractTest extends ApiTestCase
             $tested++;
         }
 
-        $this->assertGreaterThan(0, $tested, 'nenhuma rota autenticada encontrada para iterar');
+        $this->assertGreaterThanOrEqual(
+            39,
+            $tested,
+            'o laço esvaziou — middleware ou estrutura do grupo mudou em silêncio',
+        );
     }
 }
