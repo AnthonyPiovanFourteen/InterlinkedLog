@@ -24,6 +24,46 @@ class ViaCepLookupService implements CepLookupService
         '86020' => ['Londrina', 'PR'],
     ];
 
+    public function lookupAddress(string $cep): ?array
+    {
+        $digits = preg_replace('/\D/', '', $cep);
+        $city = $this->lookup($cep);
+
+        if ($city === null) {
+            return null;
+        }
+
+        // CEP resolvido pelo mapa local não tem logradouro nem bairro guardados;
+        // o detalhe só existe para CEP completo, consultado no ViaCEP.
+        $detail = strlen($digits) === 8
+            ? Cache::remember("cep_address:{$digits}", now()->addDays(30), function () use ($digits) {
+                $response = Http::timeout(5)->get("https://viacep.com.br/ws/{$digits}/json/");
+
+                if ($response->failed()) {
+                    throw new CepLookupUnavailableException;
+                }
+
+                $data = $response->json();
+                if (! is_array($data) || ! empty($data['erro'])) {
+                    return ['logradouro' => '', 'bairro' => ''];
+                }
+
+                return [
+                    'logradouro' => (string) ($data['logradouro'] ?? ''),
+                    'bairro' => (string) ($data['bairro'] ?? ''),
+                ];
+            })
+            : null;
+
+        return [
+            'cep' => $digits,
+            'logradouro' => (string) ($detail['logradouro'] ?? ''),
+            'bairro' => (string) ($detail['bairro'] ?? ''),
+            'cidade' => $city[0],
+            'uf' => $city[1],
+        ];
+    }
+
     public function lookup(string $cep): ?array
     {
         $cep = preg_replace('/\D/', '', $cep);

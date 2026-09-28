@@ -20,6 +20,8 @@ class CarrierQuote
         public readonly int $deadline,
         public readonly array $feesBreakdown = [],
         public readonly ?string $protocol = null,
+        /** Serviço escolhido, quando a transportadora oferece mais de um. */
+        public readonly ?string $service = null,
     ) {}
 
     public function toResult(): array
@@ -34,6 +36,7 @@ class CarrierQuote
             'fees_breakdown' => $this->feesBreakdown,
             'source' => 'api',
             'protocol' => $this->protocol,
+            'service' => $this->service,
         ];
     }
 }
