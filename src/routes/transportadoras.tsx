@@ -1,7 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, ChevronDown, ChevronRight, Eye, FileUp, Plug, PlugZap, Trash2 } from "lucide-react";
+import {
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  FileUp,
+  Plug,
+  PlugZap,
+  Trash2,
+  Info,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { PageHeader } from "@/shared/components/molecules/PageHeader";
 import { StatusBadge } from "@/shared/components/atoms/StatusBadge";
 import { api } from "@/lib/api";
@@ -46,6 +57,8 @@ interface CarrierItem {
 interface GatewayInfo {
   name: string;
   required_secrets: string[];
+  /** O que cada segredo é — vem do adaptador, não do frontend. */
+  secret_hints: Record<string, string>;
 }
 interface CredentialItem {
   id: string;
@@ -91,6 +104,10 @@ function TransportadorasPage() {
     queryKey: ["carrier-credentials"],
     queryFn: () => api.get<{ data: CredentialItem[] }>("/carrier-credentials").then((r) => r.data),
   });
+
+  // A explicação de cada campo vem do adaptador, via /carrier-credentials/gateways.
+  const hintFor = (key: string) =>
+    gatewaysData?.find((g) => g.name === integrating?.gateway)?.secret_hints?.[key] ?? "";
 
   const saveCredential = useMutation({
     mutationFn: (body: { carrier_id: string; gateway: string; secrets: Record<string, string> }) =>
@@ -413,52 +430,75 @@ function TransportadorasPage() {
         }}
       >
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Conectar {integrating?.name}</DialogTitle>
-            <DialogDescription>
-              Informe as credenciais de API fornecidas pela transportadora. Elas ficam
-              criptografadas e nunca são exibidas depois de salvas.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            {(
-              gatewaysData?.find((g) => g.name === integrating?.gateway)?.required_secrets ?? []
-            ).map((key) => (
-              <div key={key} className="space-y-1.5">
-                <Label className="capitalize">{key.replace(/_/g, " ")}</Label>
-                <Input
-                  type={key.includes("password") || key.includes("secret") ? "password" : "text"}
-                  value={secrets[key] ?? ""}
-                  autoComplete="off"
-                  onChange={(e) => setSecrets({ ...secrets, [key]: e.target.value })}
-                />
-              </div>
-            ))}
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIntegrating(null);
-                setSecrets({});
-              }}
-            >
-              Cancelar
-            </Button>
-            <Button
-              disabled={saveCredential.isPending}
-              onClick={() => {
-                if (!integrating?.gateway) return;
-                saveCredential.mutate({
-                  carrier_id: integrating.id,
-                  gateway: integrating.gateway,
-                  secrets,
-                });
-              }}
-            >
-              {saveCredential.isPending ? "Salvando..." : "Conectar"}
-            </Button>
-          </DialogFooter>
+          <TooltipProvider delayDuration={150}>
+            <DialogHeader>
+              <DialogTitle>Conectar {integrating?.name}</DialogTitle>
+              <DialogDescription>
+                Informe as credenciais de API fornecidas pela transportadora. Elas ficam
+                criptografadas e nunca são exibidas depois de salvas.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 py-2">
+              {(
+                gatewaysData?.find((g) => g.name === integrating?.gateway)?.required_secrets ?? []
+              ).map((key) => (
+                <div key={key} className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <Label className="capitalize">{key.replace(/_/g, " ")}</Label>
+                    {hintFor(key) && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`O que é ${key.replace(/_/g, " ")}`}
+                            className="text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <Info className="h-3.5 w-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs text-xs leading-relaxed">
+                          {hintFor(key)}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                  <Input
+                    type={key.includes("password") || key.includes("secret") ? "password" : "text"}
+                    value={secrets[key] ?? ""}
+                    autoComplete="off"
+                    onChange={(e) => setSecrets({ ...secrets, [key]: e.target.value })}
+                  />
+                  {hintFor(key) && (
+                    <p className="text-muted-foreground text-xs leading-relaxed">{hintFor(key)}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIntegrating(null);
+                  setSecrets({});
+                }}
+              >
+                Cancelar
+              </Button>
+              <Button
+                disabled={saveCredential.isPending}
+                onClick={() => {
+                  if (!integrating?.gateway) return;
+                  saveCredential.mutate({
+                    carrier_id: integrating.id,
+                    gateway: integrating.gateway,
+                    secrets,
+                  });
+                }}
+              >
+                {saveCredential.isPending ? "Salvando..." : "Conectar"}
+              </Button>
+            </DialogFooter>
+          </TooltipProvider>
         </DialogContent>
       </Dialog>
     </div>

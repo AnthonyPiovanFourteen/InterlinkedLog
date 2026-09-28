@@ -27,6 +27,15 @@ interface CarrierGateway
      */
     public function requiredSecrets(): array;
 
+    /**
+     * O que cada segredo é, em português, para a interface orientar quem
+     * configura. Declarado pelo adaptador pelo mesmo motivo de requiredSecrets:
+     * quem sabe o que 'documento_devedor' significa é quem fala com a API.
+     *
+     * @return array<string,string> chave do segredo => explicação
+     */
+    public function secretHints(): array;
+
     /** Se este gateway atende a transportadora informada. */
     public function supports(Carrier $carrier): bool;
 

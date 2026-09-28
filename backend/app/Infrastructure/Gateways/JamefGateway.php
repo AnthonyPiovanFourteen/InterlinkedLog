@@ -52,6 +52,15 @@ class JamefGateway implements CarrierGateway
         return ['username', 'password', 'documento_devedor'];
     }
 
+    public function secretHints(): array
+    {
+        return [
+            'username' => 'Usuário da API Jamef, fornecido no cadastro de integração.',
+            'password' => 'Senha do mesmo usuário.',
+            'documento_devedor' => 'CNPJ de quem paga o frete — normalmente o da sua própria empresa. Pode digitar com ou sem pontuação.',
+        ];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'jamef');

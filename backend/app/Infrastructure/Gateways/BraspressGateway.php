@@ -42,6 +42,14 @@ class BraspressGateway implements CarrierGateway
         return ['username', 'password'];
     }
 
+    public function secretHints(): array
+    {
+        return [
+            'username' => 'Usuário do portal de integração da Braspress, fornecido junto com o contrato de transporte. Não é o login do site.',
+            'password' => 'Senha do mesmo usuário de integração.',
+        ];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'braspress');

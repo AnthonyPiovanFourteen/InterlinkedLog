@@ -49,6 +49,15 @@ class LoggiGateway implements CarrierGateway
         return ['client_id', 'client_secret', 'company_id'];
     }
 
+    public function secretHints(): array
+    {
+        return [
+            'client_id' => 'Identificador da aplicação, gerado no painel da Loggi em Integrações → Credenciais.',
+            'client_secret' => 'Chave secreta emitida junto do Client ID. A Loggi a exibe uma única vez — se perdeu, gere outra.',
+            'company_id' => 'Código numérico da sua empresa na Loggi. Aparece na URL do painel, depois de /companies/.',
+        ];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'loggi');

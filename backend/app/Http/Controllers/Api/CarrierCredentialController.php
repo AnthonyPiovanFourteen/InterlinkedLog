@@ -46,6 +46,8 @@ class CarrierCredentialController extends Controller
             $data[] = [
                 'name' => $gateway->name(),
                 'required_secrets' => $gateway->requiredSecrets(),
+                // O que cada campo é, para a tela orientar quem configura.
+                'secret_hints' => $gateway->secretHints(),
             ];
         }
 

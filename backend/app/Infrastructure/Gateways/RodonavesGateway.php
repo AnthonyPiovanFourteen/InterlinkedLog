@@ -55,6 +55,14 @@ class RodonavesGateway implements CarrierGateway
         return ['username', 'password'];
     }
 
+    public function secretHints(): array
+    {
+        return [
+            'username' => 'Usuário da API da Rodonaves (RTE), fornecido pelo contato comercial.',
+            'password' => 'Senha do usuário da API.',
+        ];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         $name = mb_strtolower($carrier->name);

@@ -43,6 +43,15 @@ class JadlogGateway implements CarrierGateway
         return ['token', 'modalidade', 'cubage_factor'];
     }
 
+    public function secretHints(): array
+    {
+        return [
+            'token' => 'Token de integração fornecido pela Jadlog. Vai no cabeçalho sem o prefixo "Bearer".',
+            'modalidade' => 'Código numérico da modalidade contratada (por exemplo 3 para Expresso). Consta no seu contrato com a Jadlog.',
+            'cubage_factor' => 'Fator de cubagem em kg/m³ negociado no contrato — no rodoviário costuma ser 300. A Jadlog exige que o peso enviado seja o maior entre o real e o cubado, e este número faz esse cálculo.',
+        ];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'jadlog');

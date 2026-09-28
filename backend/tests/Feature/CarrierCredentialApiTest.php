@@ -39,6 +39,25 @@ class CarrierCredentialApiTest extends ApiTestCase
         $this->assertSame(['token', 'modalidade', 'cubage_factor'], $names['jadlog']);
     }
 
+    public function test_gateways_endpoint_explains_each_secret(): void
+    {
+        $gateways = collect($this->getJson('/api/v1/carrier-credentials/gateways', $this->authHeaders())
+            ->json('data'));
+
+        foreach ($gateways as $gateway) {
+            foreach ($gateway['required_secrets'] as $key) {
+                // Todo segredo exigido precisa de explicação: é o que a tela
+                // mostra no ícone de informação.
+                $this->assertArrayHasKey($key, $gateway['secret_hints'], "{$gateway['name']}.{$key}");
+                $this->assertNotSame('', trim($gateway['secret_hints'][$key]));
+            }
+        }
+
+        // Uma amostra do conteúdo, para a explicação não virar placeholder.
+        $jamef = $gateways->firstWhere('name', 'jamef');
+        $this->assertStringContainsString('CNPJ', $jamef['secret_hints']['documento_devedor']);
+    }
+
     public function test_store_creates_credential_without_ever_returning_secrets(): void
     {
         $response = $this->create();
