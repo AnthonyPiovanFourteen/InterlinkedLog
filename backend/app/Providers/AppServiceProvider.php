@@ -17,6 +17,7 @@ use App\Domain\Services\CarrierQuoteShadowRunner;
 use App\Domain\Services\CepLookupService;
 use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
+use App\Domain\Services\TenantContext;
 use App\Domain\Services\TransactionManager;
 use App\Http\Controllers\Api\CarrierCredentialController;
 use App\Infrastructure\Gateways\BraspressGateway;
@@ -39,6 +40,7 @@ use App\Infrastructure\Services\QuotationEngine;
 use App\Infrastructure\Services\ReportGenerator;
 use App\Infrastructure\Services\TokenAuthService;
 use App\Infrastructure\Services\ViaCepLookupService;
+use App\Infrastructure\Tenancy\RuntimeTenantContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -48,6 +50,8 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
+        $this->app->singleton(TenantContext::class, RuntimeTenantContext::class);
+
         $this->app->singleton(UserRepository::class, EloquentUserRepository::class);
         $this->app->singleton(CompanyRepository::class, EloquentCompanyRepository::class);
         $this->app->singleton(CarrierRepository::class, EloquentCarrierRepository::class);

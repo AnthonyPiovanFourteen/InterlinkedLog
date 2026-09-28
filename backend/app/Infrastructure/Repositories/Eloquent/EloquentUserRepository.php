@@ -38,7 +38,12 @@ class EloquentUserRepository implements UserRepository
             return null;
         }
 
-        return $this->findById($userId);
+        // Sem escopo de tenant: é esta consulta que ESTABELECE o tenant da
+        // requisição, então não pode ser filtrada por ele — mesmo motivo do
+        // findByEmail no login.
+        $model = User::withoutGlobalScope(TenantScope::class)->find($userId);
+
+        return $model ? $this->toEntity($model) : null;
     }
 
     public function save(UserEntity $user): void
@@ -76,7 +81,9 @@ class EloquentUserRepository implements UserRepository
 
     public function setToken(string $userId, ?string $token): void
     {
-        $user = User::find($userId);
+        // Sem escopo: emitir token é operação de autenticação, anterior ao
+        // estabelecimento do tenant.
+        $user = User::withoutGlobalScope(TenantScope::class)->find($userId);
         if (! $user) {
             return;
         }
