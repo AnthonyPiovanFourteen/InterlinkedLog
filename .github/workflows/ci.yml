@@ -166,9 +166,13 @@ jobs:
       # permite a chave pública do compose em produção, e o throttle do
       # integration-check esgota baldes de propósito — a stack deste job é
       # isolada (nenhum outro job a usa).
+      # DEMO_MODE=true e obrigatorio: o integration-check faz login, cotacao e
+      # contratacao, e so o seed de demonstracao cria usuario, transportadoras
+      # com tabela de frete e rotas. Sem ele a stack sobe vazia e o E2E falha
+      # ja no login.
       - name: Ambiente de CI
         run: |
-          printf 'APP_ENV=local\nAPP_KEY=base64:%s\n' "$(openssl rand -base64 32)" > .env
+          printf 'APP_ENV=local\nDEMO_MODE=true\nAPP_KEY=base64:%s\n' "$(openssl rand -base64 32)" > .env
 
       - name: Subir a stack (aguarda healthchecks do compose)
         run: docker compose up -d --build --wait
