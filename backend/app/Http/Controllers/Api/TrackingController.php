@@ -78,6 +78,15 @@ class TrackingController extends Controller
             return response()->json(['message' => 'Contratação não encontrada'], 404);
         }
 
+        // Automático e manual não se misturam: em contrato rastreado pela API,
+        // o humano só pode acrescentar observação, nunca criar evento. A regra
+        // vale no backend, não só na interface.
+        if ($contract->isAutoTracked()) {
+            return response()->json([
+                'message' => 'Rastreio automático: use observações em vez de criar eventos',
+            ], 422);
+        }
+
         $validator = Validator::make($request->all(), [
             'title' => 'required|string|max:255',
             'date' => 'required|date',
@@ -96,6 +105,7 @@ class TrackingController extends Controller
             date: $request->input('date'),
             time: $request->input('time'),
             observation: $request->input('observation', ''),
+            origin: TrackingEvent::ORIGIN_MANUAL,
         );
 
         $this->trackingRepository->save($event);
@@ -129,5 +139,46 @@ class TrackingController extends Controller
         return response()->json([
             'data' => ['id' => $event->id, 'title' => $event->title],
         ], 201);
+    }
+
+    /**
+     * Observação num evento existente. É o único input manual permitido em
+     * contrato com rastreio automático.
+     */
+    public function annotate(Request $request, string $contractId, string $eventId): JsonResponse
+    {
+        $companyId = $request->attributes->get('company_id');
+        $contract = $this->contractRepository->findById($contractId);
+
+        if (! $contract || $contract->companyId !== $companyId) {
+            return response()->json(['message' => 'Contratação não encontrada'], 404);
+        }
+
+        $validator = Validator::make($request->all(), ['observation' => 'required|string|max:1000']);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $event = collect($this->trackingRepository->findByContract($contractId))
+            ->first(fn (TrackingEvent $e) => $e->id === $eventId);
+
+        if (! $event) {
+            return response()->json(['message' => 'Evento não encontrado'], 404);
+        }
+
+        $this->trackingRepository->save(new TrackingEvent(
+            id: $event->id,
+            contractId: $event->contractId,
+            title: $event->title,
+            date: $event->date,
+            time: $event->time,
+            observation: $request->input('observation'),
+            createdAt: $event->createdAt,
+            origin: $event->origin,
+            externalId: $event->externalId,
+        ));
+
+        return response()->json(['message' => 'Observação registrada']);
     }
 }

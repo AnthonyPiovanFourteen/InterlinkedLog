@@ -49,6 +49,7 @@ Route::prefix('v1')->group(function () {
         Route::get('tracking', [TrackingController::class, 'index']);
         Route::get('tracking/{contractId}', [TrackingController::class, 'show']);
         Route::post('tracking/{contractId}/events', [TrackingController::class, 'store']);
+        Route::patch('tracking/{contractId}/events/{eventId}', [TrackingController::class, 'annotate']);
 
         Route::get('reports/dashboard', [ReportController::class, 'dashboard']);
         Route::get('reports/detailed', [ReportController::class, 'detailed']);
