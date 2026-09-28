@@ -108,3 +108,56 @@ php artisan test
 ```
 
 O serviço `test` vive em `profiles: ["test"]` — não sobe com `docker compose up -d`, e o `composer install` (com dependências de desenvolvimento) roda no build da imagem (`Dockerfile`, estágio `dev`).
+
+---
+
+## Primeiro acesso e modo demonstração
+
+Instalação nova começa **vazia**: só o catálogo de transportadoras com adaptador
+de API (Braspress, Jadlog, Jamef, Loggi, Rodonaves), que roda sempre porque sem
+elas não haveria onde configurar credencial.
+
+Três caminhos, decididos no boot pelo entrypoint quando o banco está vazio:
+
+```bash
+# 1. Dados de demonstração — transportadoras com tabela, cotações, contratos
+DEMO_MODE=true docker compose up -d
+
+# 2. Só o acesso, sem nenhum dado fictício
+ADMIN_COMPANY="Minha Empresa" ADMIN_EMAIL=voce@empresa.com \
+  ADMIN_PASSWORD=... docker compose up -d
+
+# 3. Nenhum dos dois: sobe vazio e imprime as instruções.
+#    Criar o acesso depois:
+docker compose exec backend php artisan app:create-admin \
+  --company="Minha Empresa" --email=voce@empresa.com --password=...
+```
+
+O `app:create-admin` é idempotente — rodar duas vezes não duplica.
+
+**Re-semear não é possível** num banco já populado: o seed só roda em banco
+vazio. Para recarregar a demonstração, `migrate:fresh --seed`.
+
+---
+
+## Fila
+
+A cotação nas APIs e o sincronismo de rastreio rodam no serviço `worker`
+(`php artisan queue:work`). Sem ele, as transportadoras integradas ficam
+permanentemente em `pendente` na cotação.
+
+```bash
+docker compose logs -f worker          # acompanhar
+docker compose restart worker          # após mudar código de job
+docker compose exec backend php artisan queue:failed   # jobs que falharam
+```
+
+O `company_id` viaja no payload de cada job: o worker não tem requisição HTTP,
+e é ele que estabelece o tenant via `TenantContext::runAs()`.
+
+**Rastreio automático** é agendado a cada 30 minutos
+(`Schedule::command('tracking:sync')`). Para disparar à mão:
+
+```bash
+docker compose exec backend php artisan tracking:sync
+```

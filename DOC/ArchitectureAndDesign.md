@@ -112,28 +112,36 @@ flowchart TB
     end
 
     subgraph application["Application Layer"]
-        usecases["Use Cases<br/><i>LoginUserUseCase · RegisterUserUseCase</i>"]
+        usecases["Use Cases<br/><i>LoginUserUseCase · CreateContractUseCase</i>"]
     end
 
     subgraph domain["Domain Layer — núcleo"]
-        entities["Entities (DTOs readonly)<br/><i>User · Company · Carrier · FreightTable · Quotation · Contract · TrackingEvent · AuditLog · SystemLog</i>"]
-        repos["Repository Ports<br/><i>UserRepository · CarrierRepository · QuotationRepository · ...</i>"]
-        services["Service Ports<br/><i>AuthService · QuotationEngineService · ReportService</i>"]
+        entities["Entities (DTOs readonly)<br/><i>User · Company · Carrier · FreightTable · Quotation · Contract<br/>TrackingEvent · CarrierCredential · CarrierQuote · QuotationGatewayAttempt</i>"]
+        repos["Repository Ports<br/><i>UserRepository · CarrierRepository · QuotationRepository<br/>CarrierCredentialRepository · QuotationGatewayAttemptRepository · ...</i>"]
+        services["Service Ports<br/><i>AuthService · QuotationEngineService · CepLookupService<br/>CarrierGateway · TrackingGateway · TenantContext<br/>TransactionManager · FreightBenchmarkService</i>"]
     end
 
     subgraph infrastructure["Infrastructure Layer"]
         eloquent["Eloquent Repositories<br/><i>EloquentUserRepository · EloquentCarrierRepository · ...</i>"]
-        impl["Services<br/><i>TokenAuthService · QuotationEngine · ReportGenerator</i>"]
+        impl["Services<br/><i>TokenAuthService · QuotationEngine · ViaCepLookupService<br/>DatabaseTransactionManager · ContractFreightBenchmark</i>"]
+        gateways["Gateways — um adaptador por transportadora<br/><i>Braspress · Jadlog · Jamef · Loggi · Rodonaves<br/>JadlogTracking</i>"]
+        tenancy["Tenancy<br/><i>RuntimeTenantContext · TenantScope</i>"]
+    end
+
+    subgraph jobs["Jobs — fora da requisição"]
+        queue["QuoteCarrierJob · SyncContractTrackingJob"]
     end
 
     http -->|"Chama"| application
     application -->|"Depende de"| domain
     infrastructure -. "Implementa" .-> domain
+    jobs -->|"Usa as portas"| domain
+    gateways -->|"Traduzem para"| entities
 
     classDef core fill:#0b3d91,stroke:#072a66,color:#fff;
     classDef layer fill:#e8eef7,stroke:#0b3d91,color:#13243a;
     class domain core;
-    class http,application,infrastructure layer;
+    class http,application,infrastructure,jobs layer;
 ```
 
 ### Regra de dependência
@@ -143,28 +151,71 @@ flowchart TB
 | **Domain** | stdlib PHP, `Domain/*` | `Application`, `Infrastructure`, `Http` |
 | **Application** | `Domain/*` | `Infrastructure`, `Http` |
 | **Infrastructure** | `Domain/*`, `Application/*`, Eloquent, frameworks | — |
-| **Http (Controllers)** | `Application/*`, `Domain/*`, `Infrastructure/*`, Laravel | — |
+| **Http (Controllers)** | `Application/*`, `Domain/*`, Laravel | `App\\Models\\*` direto |
+| **Jobs** | `Domain/*`, Laravel | acesso a Eloquent fora das portas |
+
+Além disso, a fachada `DB` só pode ser usada em `Infrastructure` — quem define a
+fronteira de transação é a aplicação, através da porta `TransactionManager`, mas
+quem a executa é a infraestrutura.
+
+**Estas regras são verificadas automaticamente** pelo PHPat (`phpstan.arch.neon`)
+e por testes que inspecionam o schema, em `tests/Feature/ArchitectureTest.php` —
+incluindo a de tenancy: todo model com coluna `company_id` deve usar o trait
+`TenantScoped`.
 
 ---
 
-## Fluxo de uma requisição (ex: `POST /api/v1/quotations`)
+## Fluxo de uma cotação (`POST /api/v1/quotations`)
+
+A cotação tem duas metades: o que responde na hora e o que chega depois.
 
 ```
-1. Frontend faz fetch POST /api/v1/quotations (Authorization: Bearer {token})
-2. Vite proxy redireciona para Laravel :8000
-3. TokenAuthMiddleware valida o token — extrai user_id + company_id
-4. TenantMiddleware injeta company_id no request
-5. ForceJsonMiddleware garante Content-Type application/json + CORS
-6. QuotationController::store() recebe o request validado
-7. QuotationEngine::process() calcula frete para cada transportadora ativa
-8.   - Converte CEPs em cidades
-9.   - Busca FreightTable ativa para rota origem → destino
-10.  - Encontra faixa de peso, calcula base + taxas
-11.  - Aplica frete mínimo
-12.  - Ordena resultados por preço, prazo, custo-benefício
-13. EloquentQuotationRepository::save() persiste Quotation + QuotationResults no MySQL (em transação)
-14. Response JSON retorna cotação com ranking de transportadoras
+SÍNCRONO — dentro da requisição
+ 1. Frontend faz POST /api/v1/quotations (Authorization: Bearer {token})
+ 2. O servidor SSR do frontend faz proxy de /api/* para o nginx do backend
+ 3. TokenAuthMiddleware valida o token e alimenta o TenantContext
+ 4. TenantMiddleware confirma que há company_id no contexto
+ 5. QuotationController::store() valida a entrada
+ 6. CepLookupService resolve os CEPs (mapa local, senão ViaCEP com cache)
+ 7. QuotationEngine::process() cota nas TABELAS locais do tenant:
+      rota casada → faixa de peso → frete + taxas → ranking
+ 8. Persiste a cotação e os resultados de tabela
+ 9. Para cada credencial ativa: grava tentativa 'pendente' e despacha
+      QuoteCarrierJob (companyId no payload — o worker não tem request HTTP)
+10. Responde imediatamente com os resultados de tabela
+
+ASSÍNCRONO — um job por transportadora, no worker
+11. QuoteCarrierJob entra com TenantContext::runAs(companyId)
+12. CarrierGateway do adaptador consulta a API da transportadora
+13. Resultado normalizado em CarrierQuote vira mais uma linha de
+      quotation_results, marcada com source='api'
+14. A tentativa passa a 'cotada', 'nao_atende', 'indisponivel' ou 'erro'
+
+LEITURA — enquanto os resultados chegam
+15. GET /quotations/{id} devolve results (reordenados a cada leitura),
+      carriers.pending, carriers.attempts e o benchmark histórico
 ```
+
+**Por que assíncrono:** as tabelas são consulta em banco e respondem em
+milissegundos; a Rodonaves sozinha faz quatro chamadas HTTP em três hosts. Um
+job por transportadora isola a lentidão e a falha — uma API fora do ar não
+atrasa nem derruba as demais.
+
+---
+
+## Isolamento de tenant
+
+O escopo é aplicado por `TenantScope` nos models com `company_id`, lendo o tenant
+ativo do `TenantContext` — uma porta de domínio com implementação de processo.
+
+Quem define o tenant é explícito: o `TokenAuthMiddleware` em HTTP, e o job na
+fila via `runAs()`. Antes o escopo lia do binding de request e ficava **inerte
+fora de HTTP**, o que tornava o worker cego para a separação entre empresas.
+
+Três consultas ignoram o escopo deliberadamente, porque são **anteriores** ao
+estabelecimento do tenant: `findByEmail` (login), `findByToken` e `setToken`.
+
+---
 
 ---
 

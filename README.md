@@ -1,8 +1,20 @@
-# InterlinkedLog
+<p align="center">
+  <img src="public/logo.png" alt="InterlinkedLog" height="110">
+</p>
 
-Sistema de cotação, contratação e rastreamento de fretes. Projeto acadêmico —
-recebe NF-e, calcula o melhor frete entre transportadoras cadastradas (preço,
-prazo e custo-benefício), gera contrato em PDF e acompanha o status da carga.
+<h1 align="center">InterlinkedLog</h1>
+
+<p align="center">
+  Cotação, contratação e rastreamento de fretes para pequenas e médias empresas.
+</p>
+
+---
+
+Recebe os dados da NF-e e cota em **todas as fontes disponíveis** — as tabelas
+de frete que a empresa carregou e as APIs das transportadoras com credencial
+configurada — apresentando lado a lado o melhor preço, o melhor prazo e o melhor
+custo-benefício, com referência do que já foi pago em rota parecida. Gera o
+documento de coleta em PDF e acompanha a carga.
 
 ## Stack
 
@@ -11,7 +23,23 @@ prazo e custo-benefício), gera contrato em PDF e acompanha o status da carga.
 | Frontend | React 19 + TanStack Start + TanStack Router/Query + Vite + Tailwind + shadcn/ui + recharts + react-simple-maps |
 | Backend | Laravel 11 (PHP 8.4) + MySQL 8 + dompdf |
 | Autenticação | Token Bearer (gerado no login, persistido no localStorage) |
-| Empacotamento | Docker Compose (mysql + frontend + backend) |
+| Fila | Laravel Queue sobre MySQL, com worker próprio |
+| Integrações | Braspress, Jadlog, Jamef, Loggi e Rodonaves |
+| Empacotamento | Docker Compose (mysql + backend + worker + frontend) |
+| Qualidade | PHPUnit, Vitest, PHPStan 5 + PHPat, Pint, ESLint, hadolint, CI com 6 jobs |
+
+## Documentação
+
+| | |
+|---|---|
+| [`DOC/Changelog.md`](DOC/Changelog.md) | **Histórico de evolução** — o que mudou e por quê |
+| [`DOC/ArchitectureAndDesign.md`](DOC/ArchitectureAndDesign.md) | C4, fluxo de cotação, isolamento de tenant |
+| [`DOC/APISpecification.md`](DOC/APISpecification.md) | Endpoints e contratos |
+| [`DOC/DataRules.md`](DOC/DataRules.md) | Modelo de dados e migrations |
+| [`DOC/InfrastructureStack.md`](DOC/InfrastructureStack.md) | Compose, Dockerfiles, variáveis |
+| [`DOC/OperationsRunbook.md`](DOC/OperationsRunbook.md) | Backup, fila, primeiro acesso |
+| [`DOC/Security.md`](DOC/Security.md) | Autenticação, tenancy, decisões |
+| [`DOC/DevelopmentGuide.md`](DOC/DevelopmentGuide.md) | Setup e convenções |
 
 ## Pré-requisitos
 
@@ -84,6 +112,70 @@ Para a demo, use estes:
 
 A tabela vive em `backend/app/Infrastructure/Services/QuotationEngine.php`.
 Pra suportar mais CEPs em produção, trocar por uma API tipo ViaCEP.
+
+## Integração com transportadoras
+
+Cinco transportadoras têm adaptador de API e vêm cadastradas por padrão. A
+integração é **opcional e por transportadora** — dá para integrar a Rodonaves e
+deixar as demais cotando por tabela.
+
+| Transportadora | Cotação | Rastreio | Autenticação |
+|---|---|---|---|
+| Braspress | ✅ | — | Basic Auth |
+| Jadlog | ✅ | ✅ | token no cabeçalho |
+| Jamef | ✅ | — | Bearer (`accessToken`) |
+| Loggi | ✅ | — | OAuth2 client credentials |
+| Rodonaves | ✅ | — | OAuth2 password grant |
+
+### Como conectar
+
+Em **Transportadoras**, a coluna *Integração* mostra três estados: `Por tabela`
+(sem adaptador), `Conectar` (tem adaptador, falta credencial) e `Integrada`.
+
+O formulário se monta sozinho a partir do que cada adaptador declara —
+`requiredSecrets()`, `secretHints()` e `documentationUrl()` na porta
+`CarrierGateway`. Transportadora nova nasce com formulário, textos de ajuda e
+link da documentação, sem tocar no frontend.
+
+As credenciais são **por empresa**, guardadas criptografadas (`encrypted:array`)
+e nunca retornam numa resposta: a API informa apenas **quais** chaves estão
+preenchidas.
+
+### O que acontece numa cotação
+
+As tabelas locais respondem na hora, porque são consulta em banco. As APIs vão
+para a **fila**, um job por transportadora — assim uma lenta ou fora do ar não
+atrasa nem derruba as demais, e cada resultado aparece assim que chega.
+
+`GET /quotations/{id}` devolve `results`, `carriers.pending` e
+`carriers.attempts`, com quatro estados por transportadora:
+
+| Estado | Significado |
+|---|---|
+| `cotada` | devolveu preço |
+| `nao_atende` | resposta legítima de negócio — não é erro |
+| `indisponivel` | falha da transportadora (timeout, 5xx, limite) |
+| `erro` | falha nossa ou de configuração |
+
+### Adicionar uma transportadora nova
+
+1. Criar o adaptador em `app/Infrastructure/Gateways/`, implementando `CarrierGateway`
+2. Registrá-lo na tag `carrier.gateways` do `AppServiceProvider`
+3. Acrescentar o nome ao `CarrierCatalogSeeder`
+
+A porta não muda. As cinco atuais convivem com autenticações, formatos e número
+de chamadas completamente diferentes sem que o contrato tenha sido alterado.
+
+## Rastreamento
+
+O modo é definido **na contratação** e não muda: `automatico` quando a
+transportadora tem API com credencial ativa, `manual` caso contrário. Os dois
+não se misturam.
+
+Em modo automático, o humano só pode **acrescentar observação** — criar evento é
+recusado com 422, e quem alimenta é o sincronismo, agendado a cada 30 minutos
+(`php artisan tracking:sync`). A deduplicação usa o identificador do evento na
+transportadora, então o job pode rodar quantas vezes for.
 
 ## Login e fluxo principal
 
@@ -173,6 +265,12 @@ intencionalmente, use `migrate:fresh --seed` — `db:seed --force` num banco
 populado não faz nada.
 
 ## Checagem de integração (rede/proxy)
+
+> O script faz login, cotação e contratação. Isso exige dados: rode a stack com
+> `DEMO_MODE=true`, que é o único caminho que cria usuário e transportadoras com
+> tabela de frete. Numa stack vazia ele falha já no login — é o que o job de
+> integração do CI faz.
+
 
 ```bash
 docker compose up -d
@@ -310,9 +408,27 @@ entrada inválida do usuário; 503 é indisponibilidade de infraestrutura.
 
 ## Próximos passos
 
-- [ ] Substituir o cepMap hardcoded por chamada à ViaCEP (ou similar).
-- [ ] Adicionar migrations para `cache`, `sessions`, `jobs` para suportar
-      drivers `database`.
-- [ ] Build de produção do frontend (`vite build` + servir estático) ao invés
-      de dev server no container.
-- [ ] Pipeline CI (lint + testes PHPUnit contra MySQL) no GitHub Actions.
+**Integrações**
+
+- Rastreio automático para Braspress, Loggi e Rodonaves: as quatro expõem
+  endpoints, mas a documentação pública não traz o formato da resposta — só a
+  Jadlog está implementada
+- Total Express e Patrus: os portais exigem credencial só para ler a
+  documentação
+- Disjuntor por transportadora no `QuoteCarrierJob`: hoje uma API fora do ar
+  consome 5 s de timeout a cada cotação
+
+**Precificação — pendências de negócio**
+
+- `frete_minimo` e `cubagem` são somados como taxas em reais. A semântica
+  provável é piso sobre o frete e fator kg/m³, mas **quem define é a tabela da
+  transportadora**, e o modelo (`fee_type`/`value`/`is_percentage`) não permite
+  declarar o comportamento de uma linha. Pré-requisito: um campo de
+  comportamento em `freight_table_fees`
+- Normalizar acentos na comparação de cidade do motor
+
+**Segurança e operação**
+
+- Token em `localStorage` (adiado, ver decisões)
+- CORS aberto; `Company::status` sem coluna correspondente
+- Versionamento de tabela de frete, caso a cotação passe a ser vinculante

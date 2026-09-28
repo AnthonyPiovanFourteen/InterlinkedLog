@@ -23,6 +23,9 @@ erDiagram
     contracts }o--|| quotations : "quotation_id"
     contracts }o--|| carriers : "carrier_id"
     contracts ||--o{ tracking_events : "contract_id"
+    companies ||--o{ carrier_credentials : "company_id"
+    carriers ||--o{ carrier_credentials : "carrier_id"
+    quotations ||--o{ quotation_gateway_attempts : "quotation_id"
 
     users ||--o{ quotations : "user_id"
     users ||--o{ audit_logs : "user_id"
@@ -114,6 +117,21 @@ erDiagram
         string cancel_reason
     }
 
+    carrier_credentials {
+        uuid id PK
+        uuid company_id FK
+        uuid carrier_id FK
+        string gateway
+        text secrets "criptografado"
+        boolean active
+    }
+    quotation_gateway_attempts {
+        uuid id PK
+        uuid quotation_id FK
+        string gateway
+        string status
+        string message
+    }
     tracking_events {
         uuid id PK
         uuid contract_id FK
@@ -288,6 +306,52 @@ Resultados do motor de cotação para cada transportadora.
 | `final_value` | DECIMAL(10,2) | Total (frete + taxas, mínimo aplicado) |
 | `deadline` | INT | Prazo em dias |
 | `fees_breakdown` | JSON | Detalhamento por taxa |
+| `source` | VARCHAR(20) | `tabela` ou `api` — de onde veio o preço |
+| `gateway` | VARCHAR(50) | Adaptador que cotou, quando `source = api` |
+| `service` | VARCHAR | Serviço escolhido, quando a transportadora oferece mais de um |
+| `protocol` | VARCHAR | Protocolo da cotação na transportadora |
+
+> Sem `source` e `gateway` não há como auditar de onde saiu o preço de um
+> contrato três meses depois.
+
+---
+
+## Tabela: `quotation_gateway_attempts`
+
+Estado da consulta a cada transportadora integrada, dentro de uma cotação.
+É o que permite à tela mostrar quem ainda está por vir e o que falhou.
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | UUID | Chave primária |
+| `quotation_id` | UUID | FK → `quotations.id` |
+| `gateway` | VARCHAR(50) | Nome do adaptador |
+| `status` | VARCHAR(20) | `pendente`, `cotada`, `nao_atende`, `indisponivel`, `erro` |
+| `message` | VARCHAR | Mensagem ao usuário quando falha; nula no caminho feliz |
+
+**Único:** `(quotation_id, gateway)`
+
+`nao_atende` **não é erro** — é resposta legítima de negócio: a transportadora
+não faz aquele trecho.
+
+---
+
+## Tabela: `carrier_credentials`
+
+Credenciais de API das transportadoras, **por tenant** — mesma decisão de
+`freight_tables`: a transportadora é catálogo global, mas o contrato (e portanto
+a credencial e o preço) é de cada empresa.
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | UUID | Chave primária |
+| `company_id` | UUID | FK → `companies.id` · **NOT NULL** · `TenantScoped` |
+| `carrier_id` | UUID | FK → `carriers.id` |
+| `gateway` | VARCHAR(50) | Adaptador: `braspress`, `jadlog`, `jamef`, `loggi`, `rodonaves` |
+| `secrets` | TEXT | **Criptografado** (`encrypted:array`). Nunca retorna em resposta |
+| `active` | BOOLEAN | Integração ligada |
+
+**Único:** `(company_id, carrier_id)` · **Índice:** `(company_id, active)`
 
 ---
 
@@ -320,6 +384,11 @@ Contratos gerados a partir de cotações aprovadas.
 
 ## Tabela: `tracking_events`
 
+> `contracts` ganhou `tracking_mode` (`automatico` | `manual`) e
+> `tracking_gateway`, definidos na contratação e imutáveis. Automático quando há
+> API com credencial ativa; manual caso contrário. Os dois não se misturam.
+
+
 Eventos de rastreamento vinculados a contratos.
 
 | Coluna | Tipo | Null | Descrição |
@@ -329,7 +398,12 @@ Eventos de rastreamento vinculados a contratos.
 | `title` | VARCHAR | N | Status livre (qualquer texto) |
 | `date` | DATE | N | Data do evento |
 | `time` | VARCHAR | N | Hora do evento (HH:MM) |
-| `observation` | VARCHAR | S | Observação adicional |
+| `observation` | VARCHAR | S | Observação — único input manual em contrato automático |
+| `origin` | VARCHAR(20) | N | `manual` ou `api` |
+| `external_id` | VARCHAR | S | Identificador do evento na transportadora |
+
+**Único:** `(contract_id, external_id)` — é o que permite ao sincronismo rodar
+quantas vezes for sem duplicar evento.
 
 ---
 

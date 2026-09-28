@@ -61,8 +61,17 @@ flowchart TB
 | Serviço | Imagem | Porta host | Porta container | Descrição |
 |---------|--------|-----------|----------------|-----------|
 | `mysql` | `mysql:8` | 3306 | 3306 | Banco de dados (volume `mysql-data`) |
-| `backend` | `./backend` (PHP 8.4 Alpine) | 8080 | 8000 | Laravel + MySQL |
-| `frontend` | `.` (Node 22 Alpine) | 3000 | 3000 | TanStack Start dev |
+| `backend` | `./backend` (PHP 8.4 Alpine) | — | 8000 | nginx + php-fpm |
+| `worker` | `./backend` | — | — | Fila: cotação nas APIs e sincronismo de rastreio |
+| `frontend` | `.` (Bun Alpine) | 3000 | 3000 | SSR de produção + proxy de `/api/*` |
+| `test` | `./backend` (target `dev`) | — | — | Só sob `--profile test`; não sobe com `up -d` |
+
+> **O backend não expõe porta.** Ele é alcançado apenas pelo proxy do frontend —
+> decisão tomada junto com o `trustProxies`: publicar `8080` permitiria forjar
+> `X-Forwarded-For` e escapar do rate limiting.
+
+> **O `worker` é obrigatório** para a cotação via API. Sem ele os jobs ficam na
+> fila e as transportadoras integradas nunca saem de `pendente`.
 
 ### Healthchecks
 
@@ -264,7 +273,7 @@ curl http://localhost:8000/up
 
 | Componente | Versão | Tipo |
 |------------|--------|------|
-| PHP | 8.2+ (ideal 8.4) com `pdo_mysql` | Runtime backend |
+| PHP | 8.4 com `pdo_mysql`, `gd` e `mbstring` | Runtime backend. `gd` é exigido pelo dompdf para embutir o logo no PDF |
 | MySQL | 8.x | Banco de dados (container `mysql:8`) |
 | Composer | 2.x | Gerenciador de dependências PHP |
 | Node.js | 22+ | Runtime frontend |

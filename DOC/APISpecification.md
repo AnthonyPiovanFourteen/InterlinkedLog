@@ -85,11 +85,26 @@ Prefixo: `/carriers` — `apiResource` completo
 
 | Método | Path | Descrição |
 |--------|------|-----------|
-| GET | `/carriers` | Lista transportadoras da empresa |
+| GET | `/carriers` | Lista o catálogo de transportadoras |
 | GET | `/carriers/{id}` | Detalha transportadora |
 | POST | `/carriers` | Cadastra transportadora |
 | PUT | `/carriers/{id}` | Atualiza transportadora |
 | DELETE | `/carriers/{id}` | Remove transportadora |
+
+> Transportadora é **catálogo global**, compartilhado entre tenants — a
+> "Transportadora XYZ" é a mesma empresa para todos. Escrita restrita a `Admin`.
+> Quem é privado por tenant é a **tabela de frete** e a **credencial de API**,
+> porque cada empresa negocia o próprio preço.
+
+Cada item traz o estado de integração:
+
+```json
+{
+  "id": "uuid", "name": "Rodonaves", "cnpj": "...",
+  "gateway": "rodonaves",   // adaptador que a atende, ou null
+  "integrated": false       // se este tenant já configurou credencial
+}
+```
 | GET | `/carriers/{carrierId}/performance` | % entregas no prazo da transportadora |
 
 **POST/PUT `/carriers`** (JSON):
@@ -105,6 +120,61 @@ Prefixo: `/carriers` — `apiResource` completo
   "status": "Ativo | Inativo"
 }
 ```
+
+---
+
+## Carrier Credentials (Credenciais de API)
+
+Credenciais das transportadoras, **por tenant**. Escrita restrita a `Admin`.
+
+| Método | Path | Descrição |
+|--------|------|-----------|
+| GET | `/carrier-credentials/gateways` | Gateways disponíveis e o que cada um exige |
+| GET | `/carrier-credentials` | Credenciais do tenant |
+| POST | `/carrier-credentials` | Configura integração |
+| PATCH | `/carrier-credentials/{id}` | Atualiza segredos ou ativa/desativa |
+| DELETE | `/carrier-credentials/{id}` | Remove integração |
+
+**Os segredos NUNCA retornam numa resposta.** A listagem informa apenas quais
+chaves estão preenchidas:
+
+```json
+{
+  "id": "uuid", "carrier_id": "uuid", "gateway": "jamef", "active": true,
+  "configured_secrets": ["username", "password", "documento_devedor"]
+}
+```
+
+**GET `/carrier-credentials/gateways`** — o que cada adaptador declara. É o que
+permite à interface montar o formulário sozinha:
+
+```json
+{
+  "name": "jamef",
+  "required_secrets": ["username", "password", "documento_devedor"],
+  "secret_hints": {
+    "documento_devedor": "CNPJ de quem paga o frete — normalmente o da sua própria empresa."
+  },
+  "documentation_url": "https://developers.jamef.com.br/documentacao"
+}
+```
+
+**POST `/carrier-credentials`** (JSON):
+```json
+{
+  "carrier_id": "uuid",
+  "gateway": "jamef",
+  "secrets": { "username": "...", "password": "...", "documento_devedor": "..." },
+  "active": true
+}
+```
+
+Segredo obrigatório ausente ou vazio → `422` com a lista do que falta.
+Credencial já existente para a transportadora → `422`.
+
+No `PATCH`, quando `secrets` vem, **substitui o conjunto inteiro** — mesclagem
+parcial deixaria ambíguo se chave omitida significa manter ou apagar. Para só
+desativar, envie apenas `active`.
 
 ---
 
@@ -132,6 +202,45 @@ file:         .xlsx (2 abas: Rotas + Taxas)
 ---
 
 ## Quotations (Cotações)
+
+> **A cotação chega em duas etapas.** O `POST` responde de imediato com os
+> resultados das tabelas locais e despacha um job por transportadora integrada.
+> O `GET /quotations/{id}` mostra os resultados crescendo, com `carriers.pending`
+> dizendo quem ainda falta.
+
+Cada resultado traz `source` (`tabela` ou `api`) e, quando vem de API, o
+`gateway`, o `service` escolhido e o `protocol` da transportadora — sem isso não
+há como auditar de onde saiu o preço de um contrato.
+
+O `GET /quotations/{id}` acrescenta:
+
+```json
+{
+  "results": [ /* reordenados a cada leitura: os de API chegam depois */ ],
+  "carriers": {
+    "pending": ["loggi"],
+    "attempts": [
+      { "gateway": "braspress", "status": "cotada", "message": null },
+      { "gateway": "jadlog", "status": "nao_atende", "message": null },
+      { "gateway": "rodonaves", "status": "indisponivel", "message": "Rodonaves (cotação) respondeu 503" }
+    ]
+  },
+  "benchmark": { "sample": 4, "median_value": 412.5, "median_deadline": 3, "months": 6 }
+}
+```
+
+| `status` | Significado |
+|---|---|
+| `pendente` | job despachado, ainda sem resposta |
+| `cotada` | devolveu preço |
+| `nao_atende` | resposta legítima de negócio — **não é erro** |
+| `indisponivel` | falha da transportadora (timeout, 5xx, limite de requisições) |
+| `erro` | falha nossa ou de configuração |
+
+O `benchmark` é a mediana do que a empresa **efetivamente contratou** em rota
+igual, com peso dentro de ±30%, nos últimos 6 meses. Mediana e não média porque
+um frete atípico distorce.
+
 
 | Método | Path | Auth | Descrição |
 |--------|------|------|-----------|
@@ -273,7 +382,16 @@ file: XML da NF-e
 |--------|------|-----------|
 | GET | `/tracking` | Lista contratos com eventos de rastreamento |
 | GET | `/tracking/{contractId}` | Eventos de um contrato específico |
-| POST | `/tracking/{contractId}/events` | Adiciona evento de rastreamento |
+| POST | `/tracking/{contractId}/events` | Adiciona evento — **só em contrato manual** |
+| PATCH | `/tracking/{contractId}/events/{eventId}` | Registra observação — vale nos dois modos |
+
+> **Automático e manual não se misturam.** O modo é definido na contratação e
+> não muda: `automatico` quando a transportadora tem API com credencial ativa,
+> `manual` caso contrário.
+>
+> Em contrato automático, `POST .../events` devolve **422** — quem alimenta é o
+> sincronismo (`php artisan tracking:sync`, agendado a cada 30 min). O único
+> input manual permitido ali é a observação.
 
 **POST `/tracking/{contractId}/events`** (JSON):
 ```json

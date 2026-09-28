@@ -99,3 +99,11 @@ Desktop.ini
 package-lock.json
 composer.phar
 backend/test-api.sh
+
+# Documentos de trabalho: analise, planos e prompts de implementacao.
+# Ficam na maquina, nao no repositorio — o que e documentacao do sistema
+# esta nos demais arquivos de DOC/.
+DOC/ArchitecturalReview.md
+DOC/PLANO-*.md
+DOC/PROMPT-*.md
+DOC/MODELO-*.md
