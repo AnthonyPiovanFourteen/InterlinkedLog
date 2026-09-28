@@ -71,20 +71,29 @@ class DatabaseSeeder extends Seeder
             ['Solistica', '66.777.888/0001-99', 'São Paulo', 'SP'],
             ['JSL', '77.888.999/0001-00', 'São Paulo', 'SP'],
             ['Total Express', '88.999.000/0001-11', 'São Paulo', 'SP'],
+            // Jadlog e Loggi não entram aqui: vêm do CarrierCatalogSeeder,
+            // junto de Braspress e Rodonaves, porque têm adaptador de API e
+            // precisam existir mesmo fora do modo demo.
+            ['Jadlog', '', 'São Paulo', 'SP'],
+            ['Loggi', '', 'São Paulo', 'SP'],
         ];
 
         $carrierIds = [];
         foreach ($carrierData as [$name, $cnpj, $city, $uf]) {
-            $carrier = Carrier::create([
-                'id' => Str::orderedUuid()->toString(),
-                'name' => $name,
-                'cnpj' => $cnpj,
-                'origin_city' => $city,
-                'origin_uf' => $uf,
-                'contact_name' => 'Contato '.$name,
-                'contact_phone' => '(11) 3000-0000',
-                'status' => CarrierStatus::ATIVA,
-            ]);
+            // firstOrCreate porque o catálogo de integráveis já rodou antes:
+            // Braspress, Jadlog, Loggi e Rodonaves podem já existir.
+            $carrier = Carrier::withoutGlobalScopes()->firstOrCreate(
+                ['name' => $name],
+                [
+                    'id' => Str::orderedUuid()->toString(),
+                    'cnpj' => $cnpj,
+                    'origin_city' => $city,
+                    'origin_uf' => $uf,
+                    'contact_name' => 'Contato '.$name,
+                    'contact_phone' => '(11) 3000-0000',
+                    'status' => CarrierStatus::ATIVA,
+                ]
+            );
             $carrierIds[] = $carrier->id;
 
             // Simple freight table for each carrier

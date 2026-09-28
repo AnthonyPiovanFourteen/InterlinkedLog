@@ -75,6 +75,9 @@ function TransportadorasPage() {
   // digitados. Os campos vêm do gateway — cada um exige chaves diferentes.
   const [integrating, setIntegrating] = useState<CarrierItem | null>(null);
   const [secrets, setSecrets] = useState<Record<string, string>>({});
+  // Gateway escolhido à mão, quando o nome da transportadora não casa com
+  // nenhum adaptador — uma empresa pode cadastrá-la com nome comercial próprio.
+  const [pickedGateway, setPickedGateway] = useState("");
 
   const { data, isLoading } = useQuery({
     queryKey: ["carriers"],
@@ -101,6 +104,7 @@ function TransportadorasPage() {
       queryClient.invalidateQueries({ queryKey: ["carrier-credentials"] });
       setIntegrating(null);
       setSecrets({});
+      setPickedGateway("");
     },
     onError: (e: Error) => toast.error(e.message),
   });
@@ -297,9 +301,7 @@ function TransportadorasPage() {
                         <TableCell>
                           {/* Integração é opcional e por transportadora: dá para
                               integrar só a Rodonaves e deixar as demais na tabela. */}
-                          {!t.gateway ? (
-                            <span className="text-xs text-muted-foreground">Sem API</span>
-                          ) : t.integrated ? (
+                          {t.integrated ? (
                             <div className="flex items-center gap-1.5">
                               <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
                                 <PlugZap className="h-3.5 w-3.5" /> Integrada
@@ -326,10 +328,12 @@ function TransportadorasPage() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSecrets({});
+                                setPickedGateway(t.gateway ?? "");
                                 setIntegrating(t);
                               }}
                             >
-                              <Plug className="mr-1 h-3.5 w-3.5" /> Conectar
+                              <Plug className="mr-1 h-3.5 w-3.5" />
+                              {t.gateway ? "Conectar" : "Conectar API"}
                             </Button>
                           )}
                         </TableCell>
@@ -409,6 +413,7 @@ function TransportadorasPage() {
           if (!o) {
             setIntegrating(null);
             setSecrets({});
+            setPickedGateway("");
           }
         }}
       >
@@ -421,8 +426,33 @@ function TransportadorasPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2">
+            {!integrating?.gateway && (
+              <div className="space-y-1.5">
+                <Label>Qual API esta transportadora usa?</Label>
+                <select
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                  value={pickedGateway}
+                  onChange={(e) => {
+                    setPickedGateway(e.target.value);
+                    setSecrets({});
+                  }}
+                >
+                  <option value="">Selecione...</option>
+                  {(gatewaysData ?? []).map((g) => (
+                    <option key={g.name} value={g.name}>
+                      {g.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-muted-foreground text-xs">
+                  Não identificamos a API pelo nome cadastrado. Escolha qual delas a transportadora
+                  usa.
+                </p>
+              </div>
+            )}
             {(
-              gatewaysData?.find((g) => g.name === integrating?.gateway)?.required_secrets ?? []
+              gatewaysData?.find((g) => g.name === (integrating?.gateway ?? pickedGateway))
+                ?.required_secrets ?? []
             ).map((key) => (
               <div key={key} className="space-y-1.5">
                 <Label className="capitalize">{key.replace(/_/g, " ")}</Label>
@@ -446,14 +476,11 @@ function TransportadorasPage() {
               Cancelar
             </Button>
             <Button
-              disabled={saveCredential.isPending}
+              disabled={saveCredential.isPending || !(integrating?.gateway ?? pickedGateway)}
               onClick={() => {
-                if (!integrating?.gateway) return;
-                saveCredential.mutate({
-                  carrier_id: integrating.id,
-                  gateway: integrating.gateway,
-                  secrets,
-                });
+                const gateway = integrating?.gateway ?? pickedGateway;
+                if (!integrating || !gateway) return;
+                saveCredential.mutate({ carrier_id: integrating.id, gateway, secrets });
               }}
             >
               {saveCredential.isPending ? "Salvando..." : "Conectar"}

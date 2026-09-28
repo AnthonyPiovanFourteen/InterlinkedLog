@@ -12,7 +12,10 @@ class ReportFlowTest extends ApiTestCase
 
         $this->assertSame(3, $dashboard['quotations_count']);
         $this->assertSame(1, $dashboard['contracts_count']);
-        $this->assertSame(126, $dashboard['total_savings']);
+        // Economia = maior cotação menos o valor contratado. O seed varia o
+        // preço por índice de transportadora (80 + índice × 15), então Jadlog e
+        // Loggi elevaram o teto em 2 × 15 × 1,2 = 36 — de 126 para 162.
+        $this->assertSame(162, $dashboard['total_savings']);
         $this->assertSame(112.2, $dashboard['total_contracted']);
         $this->assertSame(33.33, $dashboard['conversion_rate']);
         $this->assertSame('Braspress', $dashboard['top_carrier']);

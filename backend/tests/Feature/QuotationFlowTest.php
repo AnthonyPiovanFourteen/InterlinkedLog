@@ -12,7 +12,9 @@ class QuotationFlowTest extends ApiTestCase
         $quotation = $this->createQuotation();
 
         $this->assertSame('VALIDA', $quotation['status']);
-        $this->assertCount(8, $quotation['results']);
+        // 10 transportadoras no seed: as 8 originais mais Jadlog e Loggi, que
+        // vêm do catálogo de integráveis e também recebem tabela na demo.
+        $this->assertCount(10, $quotation['results']);
 
         foreach ($quotation['results'] as $result) {
             // CARACTERIZAÇÃO: frete_minimo (50,00) e cubagem (300,00) são somados

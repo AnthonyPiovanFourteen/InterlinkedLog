@@ -26,6 +26,12 @@ done
 echo "MySQL disponível — rodando migrations"
 php artisan migrate --force
 
+# Catalogo de transportadoras com adaptador de API: roda sempre, e idempotente.
+# Nao e dado de demonstracao — sem elas cadastradas, nao ha onde configurar a
+# credencial da integracao.
+echo "Garantindo catalogo de transportadoras integraveis"
+php artisan db:seed --class=CarrierCatalogSeeder --force || true
+
 EMPRESAS=$(php artisan tinker --execute="echo \App\Models\Company::count();" 2>/dev/null)
 
 if [ "${EMPRESAS:-0}" = "0" ]; then
