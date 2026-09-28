@@ -11,10 +11,18 @@ const API_TARGET = process.env.VITE_API_URL || "http://backend:8000";
 const CLIENT_DIR = new URL("./dist/client/", import.meta.url).pathname;
 
 const MIME = {
-  ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css",
-  ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png",
-  ".jpg": "image/jpeg", ".webp": "image/webp", ".ico": "image/x-icon",
-  ".woff": "font/woff", ".woff2": "font/woff2", ".map": "application/json",
+  ".js": "text/javascript",
+  ".mjs": "text/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".woff": "font/woff",
+  ".woff2": "font/woff2",
+  ".map": "application/json",
 };
 
 // O handler SSR não serve o build do cliente: os assets de dist/client

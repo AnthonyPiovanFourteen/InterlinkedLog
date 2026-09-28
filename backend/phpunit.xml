@@ -20,6 +20,11 @@
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
+        <!-- Chave fixa de teste: a suite usa cast encrypted e precisa de
+             APP_KEY em qualquer ambiente, nao so onde o compose a define.
+             Nao e segredo de producao — o entrypoint recusa esta classe
+             de chave quando APP_ENV=production. -->
+        <env name="APP_KEY" value="base64:Nk5pR1hQbEt2M2ZKc1dZdDhBbUNoRHhFejRHYjJVbnE="/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="mysql"/>
