@@ -19,7 +19,9 @@ use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
 use App\Domain\Services\TransactionManager;
 use App\Infrastructure\Gateways\BraspressGateway;
+use App\Infrastructure\Gateways\JadlogGateway;
 use App\Infrastructure\Gateways\LoggiGateway;
+use App\Infrastructure\Gateways\RodonavesGateway;
 use App\Infrastructure\Repositories\Eloquent\EloquentAuditLogRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentCarrierCredentialRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentCarrierRepository;
@@ -60,7 +62,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Gateways de cotação ao vivo. Adicionar transportadora nova é
         // acrescentar um adaptador a esta lista.
-        $this->app->tag([BraspressGateway::class, LoggiGateway::class], 'carrier.gateways');
+        $this->app->tag([
+            BraspressGateway::class,
+            LoggiGateway::class,
+            JadlogGateway::class,
+            RodonavesGateway::class,
+        ], 'carrier.gateways');
 
         $this->app->singleton(CarrierQuoteShadowRunner::class, fn ($app) => new LoggingCarrierQuoteShadowRunner(
             $app->tagged('carrier.gateways'),
