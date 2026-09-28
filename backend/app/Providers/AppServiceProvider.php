@@ -16,6 +16,7 @@ use App\Domain\Repositories\UserRepository;
 use App\Domain\Services\AuthService;
 use App\Domain\Services\CarrierQuoteShadowRunner;
 use App\Domain\Services\CepLookupService;
+use App\Domain\Services\FreightBenchmarkService;
 use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
 use App\Domain\Services\TenantContext;
@@ -36,6 +37,7 @@ use App\Infrastructure\Repositories\Eloquent\EloquentQuotationRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentSystemLogRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentTrackingEventRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentUserRepository;
+use App\Infrastructure\Services\ContractFreightBenchmark;
 use App\Infrastructure\Services\DatabaseTransactionManager;
 use App\Infrastructure\Services\LoggingCarrierQuoteShadowRunner;
 use App\Infrastructure\Services\QuotationEngine;
@@ -90,6 +92,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(CepLookupService::class, ViaCepLookupService::class);
         $this->app->singleton(TransactionManager::class, DatabaseTransactionManager::class);
         $this->app->singleton(ReportService::class, ReportGenerator::class);
+        $this->app->singleton(FreightBenchmarkService::class, ContractFreightBenchmark::class);
     }
 
     public function boot(): void

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\TenantScoped;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Contract extends Model
 {
@@ -39,5 +40,10 @@ class Contract extends Model
         return [
             'id' => 'string',
         ];
+    }
+
+    public function quotation(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class);
     }
 }

@@ -9,6 +9,7 @@ use App\Domain\Exceptions\CepNotFoundException;
 use App\Domain\Repositories\CarrierCredentialRepository;
 use App\Domain\Repositories\QuotationGatewayAttemptRepository;
 use App\Domain\Repositories\QuotationRepository;
+use App\Domain\Services\FreightBenchmarkService;
 use App\Domain\Services\QuotationEngineService;
 use App\Jobs\QuoteCarrierJob;
 use Illuminate\Http\JsonResponse;
@@ -24,6 +25,7 @@ class QuotationController extends Controller
         private QuotationEngineService $engine,
         private CarrierCredentialRepository $credentialRepository,
         private QuotationGatewayAttemptRepository $attemptRepository,
+        private FreightBenchmarkService $benchmark,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -168,6 +170,8 @@ class QuotationController extends Controller
                 // há mais transportadora pendente.
                 'results' => $this->engine->rankResults($quotation->results),
                 'carriers' => $this->progress($quotation->id),
+                // Referência do que a empresa pagou em rota parecida.
+                'benchmark' => $this->benchmark->forQuotation($quotation),
                 'created_at' => $quotation->createdAt,
             ],
         ]);
