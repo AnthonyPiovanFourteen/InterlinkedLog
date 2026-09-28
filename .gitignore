@@ -107,3 +107,7 @@ DOC/ArchitecturalReview.md
 DOC/PLANO-*.md
 DOC/PROMPT-*.md
 DOC/MODELO-*.md
+
+# Cache de build do TanStack e arquivos de trava de editor de planilha
+.tanstack/
+*.~lock.*#
