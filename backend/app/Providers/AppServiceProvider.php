@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\CarrierCredentialController;
 use App\Infrastructure\Gateways\BraspressGateway;
 use App\Infrastructure\Gateways\JadlogGateway;
 use App\Infrastructure\Gateways\JadlogTrackingGateway;
+use App\Infrastructure\Gateways\JamefGateway;
 use App\Infrastructure\Gateways\LoggiGateway;
 use App\Infrastructure\Gateways\RodonavesGateway;
 use App\Infrastructure\Repositories\Eloquent\EloquentAuditLogRepository;
@@ -76,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
             BraspressGateway::class,
             LoggiGateway::class,
             JadlogGateway::class,
+            JamefGateway::class,
             RodonavesGateway::class,
         ], 'carrier.gateways');
 

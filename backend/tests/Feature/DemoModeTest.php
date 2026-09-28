@@ -47,12 +47,12 @@ class DemoModeTest extends TestCase
         // As quatro com adaptador existem mesmo com o modo demo desligado —
         // sem elas não haveria onde configurar a credencial.
         $names = Carrier::pluck('name')->all();
-        foreach (['Braspress', 'Jadlog', 'Loggi', 'Rodonaves'] as $expected) {
+        foreach (['Braspress', 'Jadlog', 'Jamef', 'Loggi', 'Rodonaves'] as $expected) {
             $this->assertContains($expected, $names);
         }
 
         // E nada de dado fictício junto.
-        $this->assertSame(4, Carrier::count());
+        $this->assertSame(5, Carrier::count());
         $this->assertSame(0, Company::withoutGlobalScopes()->count());
     }
 
@@ -61,7 +61,7 @@ class DemoModeTest extends TestCase
         $this->seed(CarrierCatalogSeeder::class);
         $this->seed(CarrierCatalogSeeder::class);
 
-        $this->assertSame(4, Carrier::count());
+        $this->assertSame(5, Carrier::count());
     }
 
     public function test_demo_seed_does_not_duplicate_the_catalog(): void

@@ -27,6 +27,7 @@ class CarrierCatalogSeeder extends Seeder
     private array $catalog = [
         ['Braspress', 'São Paulo', 'SP'],
         ['Jadlog', 'São Paulo', 'SP'],
+        ['Jamef', 'Belo Horizonte', 'MG'],
         ['Loggi', 'São Paulo', 'SP'],
         ['Rodonaves', 'Ribeirão Preto', 'SP'],
     ];

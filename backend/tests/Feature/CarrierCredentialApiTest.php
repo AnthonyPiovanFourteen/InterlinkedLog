@@ -161,10 +161,12 @@ class CarrierCredentialApiTest extends ApiTestCase
     {
         $carriers = collect($this->getJson('/api/v1/carriers', $this->authHeaders())->json('data'));
 
-        // O seed traz Braspress e Rodonaves (com gateway) e Jamef (sem).
+        // Com adaptador de API.
         $this->assertSame('braspress', $carriers->firstWhere('name', 'Braspress')['gateway']);
         $this->assertSame('rodonaves', $carriers->firstWhere('name', 'Rodonaves')['gateway']);
-        $this->assertNull($carriers->firstWhere('name', 'Jamef')['gateway']);
+        $this->assertSame('jamef', $carriers->firstWhere('name', 'Jamef')['gateway']);
+        // Sem adaptador: segue disponível só por tabela.
+        $this->assertNull($carriers->firstWhere('name', 'TNT Mercúrio')['gateway']);
 
         // Nenhuma integrada ainda.
         $this->assertSame(0, $carriers->where('integrated', true)->count());
