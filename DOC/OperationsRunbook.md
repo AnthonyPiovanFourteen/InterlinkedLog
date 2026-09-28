@@ -161,3 +161,27 @@ e é ele que estabelece o tenant via `TenantContext::runAs()`.
 ```bash
 docker compose exec backend php artisan tracking:sync
 ```
+
+---
+
+## Verificação do fluxo de transportadoras
+
+Além do `integration-check.sh`, que cobre rede e proxy, há uma verificação
+focada na integração com transportadoras:
+
+```bash
+docker compose up -d
+./scripts/carrier-api-check.sh
+```
+
+São 21 verificações contra a stack real, em sequência: catálogo e quais têm
+adaptador, contrato do endpoint de gateways (todo campo exigido tem explicação
+e link de documentação), cadastro de credencial com as regras de validação e de
+sigilo, cotação com resultado progressivo, e remoção.
+
+Roda **sem credencial real**: a credencial fictícia faz a transportadora
+responder `401`, e o script verifica justamente que isso vira `indisponivel`
+sem derrubar a cotação — os resultados de tabela permanecem.
+
+É idempotente: remove ao final tudo o que criou, e limpa credencial deixada por
+execução anterior. Exit code diferente de zero quando algo regride.
