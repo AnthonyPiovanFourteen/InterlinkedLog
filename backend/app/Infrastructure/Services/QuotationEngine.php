@@ -142,6 +142,11 @@ class QuotationEngine implements QuotationEngineService
         return $breakdown;
     }
 
+    public function rankResults(array $results): array
+    {
+        return $this->rank($results);
+    }
+
     private function rank(array $results): array
     {
         usort($results, fn ($a, $b) => $a['final_value'] <=> $b['final_value']);

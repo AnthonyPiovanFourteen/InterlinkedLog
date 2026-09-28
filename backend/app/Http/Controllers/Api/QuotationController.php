@@ -3,10 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Entities\Quotation;
+use App\Domain\Entities\QuotationGatewayAttempt;
 use App\Domain\Exceptions\CepLookupUnavailableException;
 use App\Domain\Exceptions\CepNotFoundException;
+use App\Domain\Repositories\CarrierCredentialRepository;
+use App\Domain\Repositories\QuotationGatewayAttemptRepository;
 use App\Domain\Repositories\QuotationRepository;
 use App\Domain\Services\QuotationEngineService;
+use App\Jobs\QuoteCarrierJob;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -18,6 +22,8 @@ class QuotationController extends Controller
     public function __construct(
         private QuotationRepository $repository,
         private QuotationEngineService $engine,
+        private CarrierCredentialRepository $credentialRepository,
+        private QuotationGatewayAttemptRepository $attemptRepository,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -119,6 +125,11 @@ class QuotationController extends Controller
 
         $this->repository->save($quotation);
 
+        // As tabelas locais já responderam (são consulta em banco). As APIs vão
+        // para a fila: cada transportadora num job próprio, aparecendo na tela
+        // conforme respondem.
+        $this->dispatchCarrierQuotes($companyId, $quotation->id);
+
         return response()->json([
             'data' => [
                 'id' => $quotation->id,
@@ -152,10 +163,32 @@ class QuotationController extends Controller
                 'weight' => $quotation->weight, 'boxes' => $quotation->boxes,
                 'volume' => $quotation->volume, 'cargo_value' => $quotation->cargoValue,
                 'status' => $quotation->status, 'valid_until' => $quotation->validUntil,
-                'results' => $quotation->results,
+                // Reordenado a cada leitura: resultados de API chegam depois
+                // dos de tabela, então o "melhor" só é definitivo quando não
+                // há mais transportadora pendente.
+                'results' => $this->engine->rankResults($quotation->results),
+                'carriers' => $this->progress($quotation->id),
                 'created_at' => $quotation->createdAt,
             ],
         ]);
+    }
+
+    /** Estado de cada transportadora consultada por API, para a tela acompanhar. */
+    private function progress(string $quotationId): array
+    {
+        $attempts = $this->attemptRepository->findByQuotation($quotationId);
+
+        return [
+            'pending' => array_values(array_map(
+                fn ($a) => $a->gateway,
+                array_filter($attempts, fn ($a) => $a->isPending())
+            )),
+            'attempts' => array_map(fn ($a) => [
+                'gateway' => $a->gateway,
+                'status' => $a->status,
+                'message' => $a->message,
+            ], $attempts),
+        ];
     }
 
     public function cancel(Request $request, string $id): JsonResponse
@@ -244,5 +277,37 @@ class QuotationController extends Controller
                 'cargo_value' => (float) ($extract('total/ICMSTot/vProd') ?: 0),
             ],
         ]);
+    }
+
+    /**
+     * Um job por gateway com credencial ativa, e um registro 'pendente' criado
+     * de imediato — assim a tela sabe quem ainda está por vir, em vez de
+     * mostrar uma lista que cresce sem explicação.
+     */
+    private function dispatchCarrierQuotes(string $companyId, string $quotationId): void
+    {
+        $credentials = $this->credentialRepository->activeForCompany($companyId);
+
+        if ($credentials === []) {
+            return;
+        }
+
+        $dispatched = [];
+
+        foreach ($credentials as $credential) {
+            if (in_array($credential->gateway, $dispatched, true)) {
+                continue;
+            }
+            $dispatched[] = $credential->gateway;
+
+            $this->attemptRepository->save(new QuotationGatewayAttempt(
+                id: null,
+                quotationId: $quotationId,
+                gateway: $credential->gateway,
+                status: QuotationGatewayAttempt::PENDING,
+            ));
+
+            QuoteCarrierJob::dispatch($companyId, $quotationId, $credential->gateway);
+        }
     }
 }

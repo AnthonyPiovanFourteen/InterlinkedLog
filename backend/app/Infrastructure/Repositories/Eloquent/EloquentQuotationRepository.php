@@ -51,6 +51,26 @@ class EloquentQuotationRepository implements QuotationRepository
             ->all();
     }
 
+    public function appendResult(string $quotationId, array $result): void
+    {
+        QuotationResult::updateOrCreate(
+            ['quotation_id' => $quotationId, 'carrier_id' => $result['carrier_id']],
+            [
+                'id' => Str::orderedUuid()->toString(),
+                'carrier_name' => $result['carrier_name'],
+                'source' => $result['source'] ?? 'tabela',
+                'gateway' => $result['gateway'] ?? null,
+                'service' => $result['service'] ?? null,
+                'protocol' => $result['protocol'] ?? null,
+                'freight_value' => $result['freight_value'],
+                'fees' => $result['fees'],
+                'final_value' => $result['final_value'],
+                'deadline' => $result['deadline'],
+                'fees_breakdown' => $result['fees_breakdown'] ?? null,
+            ]
+        );
+    }
+
     public function save(QuotationEntity $quotation): void
     {
         $id = $quotation->id ?? Str::orderedUuid()->toString();
@@ -90,6 +110,10 @@ class EloquentQuotationRepository implements QuotationRepository
                         'quotation_id' => $id,
                         'carrier_id' => $result['carrier_id'],
                         'carrier_name' => $result['carrier_name'],
+                        'source' => $result['source'] ?? 'tabela',
+                        'gateway' => $result['gateway'] ?? null,
+                        'service' => $result['service'] ?? null,
+                        'protocol' => $result['protocol'] ?? null,
                         'freight_value' => $result['freight_value'],
                         'fees' => $result['fees'],
                         'final_value' => $result['final_value'],
@@ -112,6 +136,10 @@ class EloquentQuotationRepository implements QuotationRepository
                 'final_value' => (float) $r->final_value,
                 'deadline' => (int) $r->deadline,
                 'fees_breakdown' => $r->fees_breakdown,
+                'source' => $r->source ?? 'tabela',
+                'gateway' => $r->gateway,
+                'service' => $r->service,
+                'protocol' => $r->protocol,
             ];
         })->toArray();
 
