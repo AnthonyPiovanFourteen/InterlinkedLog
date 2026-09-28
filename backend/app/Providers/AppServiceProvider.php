@@ -20,6 +20,7 @@ use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
 use App\Domain\Services\TenantContext;
 use App\Domain\Services\TransactionManager;
+use App\Http\Controllers\Api\CarrierController;
 use App\Http\Controllers\Api\CarrierCredentialController;
 use App\Infrastructure\Gateways\BraspressGateway;
 use App\Infrastructure\Gateways\JadlogGateway;
@@ -81,9 +82,14 @@ class AppServiceProvider extends ServiceProvider
         // Rastreio é porta separada: nem toda transportadora que cota rastreia.
         $this->app->tag([JadlogTrackingGateway::class], 'tracking.gateways');
 
-        $this->app->when(CarrierCredentialController::class)
-            ->needs('$gateways')
-            ->give(fn ($app) => $app->tagged('carrier.gateways'));
+        // Os dois controllers recebem a lista de gateways: um para validar os
+        // segredos exigidos, outro para dizer quais transportadoras oferecem
+        // integração.
+        foreach ([CarrierCredentialController::class, CarrierController::class] as $controller) {
+            $this->app->when($controller)
+                ->needs('$gateways')
+                ->give(fn ($app) => $app->tagged('carrier.gateways'));
+        }
 
         $this->app->singleton(CepLookupService::class, ViaCepLookupService::class);
         $this->app->singleton(TransactionManager::class, DatabaseTransactionManager::class);

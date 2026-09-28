@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Domain\Entities\Carrier;
 use App\Domain\Entities\CarrierStatus;
 use App\Domain\Entities\Role;
+use App\Domain\Repositories\CarrierCredentialRepository;
 use App\Domain\Repositories\CarrierRepository;
+use App\Domain\Services\CarrierGateway;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -14,7 +16,12 @@ use Illuminate\Support\Str;
 
 class CarrierController extends Controller
 {
-    public function __construct(private CarrierRepository $repository) {}
+    /** @param  iterable<CarrierGateway>  $gateways */
+    public function __construct(
+        private CarrierRepository $repository,
+        private CarrierCredentialRepository $credentials,
+        private iterable $gateways,
+    ) {}
 
     private function isAdmin(Request $request): bool
     {
@@ -26,8 +33,11 @@ class CarrierController extends Controller
         return response()->json(['message' => 'Acesso restrito a administradores'], 403);
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
+        $companyId = $request->attributes->get('company_id');
+        $configured = $this->credentials->activeForCompany($companyId);
+
         $carriers = $this->repository->findAll();
         $data = array_map(fn (Carrier $c) => [
             'id' => $c->id,
@@ -39,6 +49,10 @@ class CarrierController extends Controller
             'contact_name' => $c->contactName,
             'contact_phone' => $c->contactPhone,
             'contact_email' => $c->contactEmail,
+            // Integração é opcional e por transportadora: o tenant pode
+            // integrar a Rodonaves e deixar as demais na tabela.
+            'gateway' => $this->gatewayFor($c),
+            'integrated' => isset($configured[$c->id]),
         ], $carriers);
 
         return response()->json(['data' => $data]);
@@ -149,5 +163,17 @@ class CarrierController extends Controller
         $this->repository->delete($id);
 
         return response()->json(['message' => 'Transportadora removida']);
+    }
+
+    /** Gateway que atende esta transportadora, ou null se não há integração. */
+    private function gatewayFor(Carrier $carrier): ?string
+    {
+        foreach ($this->gateways as $gateway) {
+            if ($gateway->supports($carrier)) {
+                return $gateway->name();
+            }
+        }
+
+        return null;
     }
 }

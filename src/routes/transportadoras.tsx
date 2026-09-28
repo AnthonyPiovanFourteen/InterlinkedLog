@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, ChevronDown, ChevronRight, Eye, FileUp } from "lucide-react";
+import { Plus, ChevronDown, ChevronRight, Eye, FileUp, Plug, PlugZap, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +38,21 @@ interface CarrierItem {
   contact_name: string;
   contact_phone: string;
   contact_email: string;
+  /** Gateway que atende esta transportadora, ou null se não há integração. */
+  gateway: string | null;
+  /** Se este tenant já configurou credencial para ela. */
+  integrated: boolean;
+}
+interface GatewayInfo {
+  name: string;
+  required_secrets: string[];
+}
+interface CredentialItem {
+  id: string;
+  carrier_id: string;
+  gateway: string;
+  active: boolean;
+  configured_secrets: string[];
 }
 interface FreightTableItem {
   id: string;
@@ -56,9 +71,48 @@ export const Route = createFileRoute("/transportadoras")({
 
 function TransportadorasPage() {
   const queryClient = useQueryClient();
+  // Transportadora cuja credencial está sendo configurada, e os segredos
+  // digitados. Os campos vêm do gateway — cada um exige chaves diferentes.
+  const [integrating, setIntegrating] = useState<CarrierItem | null>(null);
+  const [secrets, setSecrets] = useState<Record<string, string>>({});
+
   const { data, isLoading } = useQuery({
     queryKey: ["carriers"],
     queryFn: () => api.get<{ data: CarrierItem[] }>("/carriers").then((r) => r.data),
+  });
+
+  const { data: gatewaysData } = useQuery({
+    queryKey: ["carrier-gateways"],
+    queryFn: () =>
+      api.get<{ data: GatewayInfo[] }>("/carrier-credentials/gateways").then((r) => r.data),
+  });
+
+  const { data: credentialsData } = useQuery({
+    queryKey: ["carrier-credentials"],
+    queryFn: () => api.get<{ data: CredentialItem[] }>("/carrier-credentials").then((r) => r.data),
+  });
+
+  const saveCredential = useMutation({
+    mutationFn: (body: { carrier_id: string; gateway: string; secrets: Record<string, string> }) =>
+      api.post("/carrier-credentials", body),
+    onSuccess: () => {
+      toast.success("Integração configurada");
+      queryClient.invalidateQueries({ queryKey: ["carriers"] });
+      queryClient.invalidateQueries({ queryKey: ["carrier-credentials"] });
+      setIntegrating(null);
+      setSecrets({});
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const removeCredential = useMutation({
+    mutationFn: (id: string) => api.delete(`/carrier-credentials/${id}`),
+    onSuccess: () => {
+      toast.success("Integração removida");
+      queryClient.invalidateQueries({ queryKey: ["carriers"] });
+      queryClient.invalidateQueries({ queryKey: ["carrier-credentials"] });
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const { data: freightTables } = useQuery({
@@ -201,13 +255,14 @@ function TransportadorasPage() {
                 <TableHead>CNPJ</TableHead>
                 <TableHead>Cidade origem</TableHead>
                 <TableHead>Contato</TableHead>
+                <TableHead>Integração</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Carregando...
                   </TableCell>
                 </TableRow>
@@ -240,12 +295,51 @@ function TransportadorasPage() {
                           {t.contact_phone ? ` · ${t.contact_phone}` : ""}
                         </TableCell>
                         <TableCell>
+                          {/* Integração é opcional e por transportadora: dá para
+                              integrar só a Rodonaves e deixar as demais na tabela. */}
+                          {!t.gateway ? (
+                            <span className="text-xs text-muted-foreground">Sem API</span>
+                          ) : t.integrated ? (
+                            <div className="flex items-center gap-1.5">
+                              <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                <PlugZap className="h-3.5 w-3.5" /> Integrada
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                title="Remover integração"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const cred = credentialsData?.find((c) => c.carrier_id === t.id);
+                                  if (cred) removeCredential.mutate(cred.id);
+                                }}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSecrets({});
+                                setIntegrating(t);
+                              }}
+                            >
+                              <Plug className="mr-1 h-3.5 w-3.5" /> Conectar
+                            </Button>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <StatusBadge status={t.status} />
                         </TableCell>
                       </TableRow>
                       {isExpanded && (
                         <TableRow className="hover:bg-transparent bg-muted/20">
-                          <TableCell colSpan={6} className="p-0">
+                          <TableCell colSpan={7} className="p-0">
                             <div className="px-6 py-3">
                               <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
                                 Tabelas de Frete
@@ -307,6 +401,66 @@ function TransportadorasPage() {
           </Table>
         </CardContent>
       </Card>
+      {/* Os campos vêm do gateway: cada API exige segredos diferentes, e o
+          backend valida contra a mesma lista. */}
+      <Dialog
+        open={integrating !== null}
+        onOpenChange={(o) => {
+          if (!o) {
+            setIntegrating(null);
+            setSecrets({});
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Conectar {integrating?.name}</DialogTitle>
+            <DialogDescription>
+              Informe as credenciais de API fornecidas pela transportadora. Elas ficam
+              criptografadas e nunca são exibidas depois de salvas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            {(
+              gatewaysData?.find((g) => g.name === integrating?.gateway)?.required_secrets ?? []
+            ).map((key) => (
+              <div key={key} className="space-y-1.5">
+                <Label className="capitalize">{key.replace(/_/g, " ")}</Label>
+                <Input
+                  type={key.includes("password") || key.includes("secret") ? "password" : "text"}
+                  value={secrets[key] ?? ""}
+                  autoComplete="off"
+                  onChange={(e) => setSecrets({ ...secrets, [key]: e.target.value })}
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIntegrating(null);
+                setSecrets({});
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={saveCredential.isPending}
+              onClick={() => {
+                if (!integrating?.gateway) return;
+                saveCredential.mutate({
+                  carrier_id: integrating.id,
+                  gateway: integrating.gateway,
+                  secrets,
+                });
+              }}
+            >
+              {saveCredential.isPending ? "Salvando..." : "Conectar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

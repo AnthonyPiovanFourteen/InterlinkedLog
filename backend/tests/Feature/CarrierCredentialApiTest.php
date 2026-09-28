@@ -156,4 +156,36 @@ class CarrierCredentialApiTest extends ApiTestCase
 
         $this->assertSame(0, CredentialModel::withoutGlobalScopes()->count());
     }
+
+    public function test_carriers_listing_says_which_have_integration_available(): void
+    {
+        $carriers = collect($this->getJson('/api/v1/carriers', $this->authHeaders())->json('data'));
+
+        // O seed traz Braspress e Rodonaves (com gateway) e Jamef (sem).
+        $this->assertSame('braspress', $carriers->firstWhere('name', 'Braspress')['gateway']);
+        $this->assertSame('rodonaves', $carriers->firstWhere('name', 'Rodonaves')['gateway']);
+        $this->assertNull($carriers->firstWhere('name', 'Jamef')['gateway']);
+
+        // Nenhuma integrada ainda.
+        $this->assertSame(0, $carriers->where('integrated', true)->count());
+    }
+
+    public function test_integration_is_per_carrier_not_global(): void
+    {
+        $rodonaves = collect($this->getJson('/api/v1/carriers', $this->authHeaders())->json('data'))
+            ->firstWhere('name', 'Rodonaves');
+
+        $this->postJson('/api/v1/carrier-credentials', [
+            'carrier_id' => $rodonaves['id'],
+            'gateway' => 'rodonaves',
+            'secrets' => ['username' => 'u', 'password' => 'p'],
+        ], $this->authHeaders())->assertStatus(201);
+
+        $carriers = collect($this->getJson('/api/v1/carriers', $this->authHeaders())->json('data'));
+
+        // Só a Rodonaves fica integrada; Braspress segue disponível e desligada.
+        $this->assertTrue($carriers->firstWhere('name', 'Rodonaves')['integrated']);
+        $this->assertFalse($carriers->firstWhere('name', 'Braspress')['integrated']);
+        $this->assertSame('braspress', $carriers->firstWhere('name', 'Braspress')['gateway']);
+    }
 }
