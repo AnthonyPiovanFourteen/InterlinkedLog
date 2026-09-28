@@ -1,0 +1,285 @@
+{
+  "info": {
+    "name": "InterlinkedLog — Transportadoras",
+    "description": "Fluxo de integração com transportadoras: autenticar, ver quais têm API, conectar credencial e cotar.\n\nO backend não expõe porta: tudo passa por http://localhost:3000/api/v1, que é o proxy do frontend.\n\nO login guarda o token na variável {{token}} automaticamente — não precisa copiar nada.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api/v1"
+    },
+    {
+      "key": "email",
+      "value": "admin@interlinked.io"
+    },
+    {
+      "key": "senha",
+      "value": "admin123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "carrier_id",
+      "value": ""
+    },
+    {
+      "key": "credential_id",
+      "value": ""
+    },
+    {
+      "key": "quotation_id",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1 · Entrar",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const d = pm.response.json();",
+              "pm.collectionVariables.set('token', d.token);",
+              "pm.test('recebeu token', () => pm.expect(d.token).to.be.a('string'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{senha}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "login"
+          ]
+        },
+        "description": "Guarda o token em {{token}}. As demais requisições já o usam.\n\nAtenção: 5 tentativas por minuto. Errar a senha várias vezes devolve 429."
+      }
+    },
+    {
+      "name": "2 · Transportadoras e quais têm API",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const d = pm.response.json().data;",
+              "const comApi = d.filter(c => c.gateway);",
+              "console.log(`${comApi.length} de ${d.length} têm API disponível`);",
+              "comApi.forEach(c => console.log(`  ${c.name} → ${c.gateway}${c.integrated ? ' (conectada)' : ''}`));",
+              "if (comApi.length) pm.collectionVariables.set('carrier_id', comApi[0].id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/carriers",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "carriers"
+          ]
+        },
+        "description": "Cada item traz:\n· gateway — qual adaptador a atende, ou null se for só por tabela\n· integrated — se esta empresa já configurou credencial\n\nGuarda a primeira com API em {{carrier_id}}."
+      }
+    },
+    {
+      "name": "3 · O que cada API exige",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.response.json().data.forEach(g => {",
+              "  console.log(`${g.name}: ${g.required_secrets.join(', ')}`);",
+              "  console.log(`  doc: ${g.documentation_url}`);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/carrier-credentials/gateways",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "carrier-credentials",
+            "gateways"
+          ]
+        },
+        "description": "Lista os cinco adaptadores, os campos que cada um exige, a explicação de cada campo e o link da documentação oficial.\n\nÉ o que a tela usa para montar o formulário sozinha."
+      }
+    },
+    {
+      "name": "4 · Conectar credencial",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "  const d = pm.response.json().data;",
+              "  pm.collectionVariables.set('credential_id', d.id);",
+              "  pm.test('segredo não volta na resposta', () => pm.expect(d).to.not.have.property('secrets'));",
+              "  console.log('chaves configuradas:', d.configured_secrets.join(', '));",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"carrier_id\": \"{{carrier_id}}\",\n  \"gateway\": \"braspress\",\n  \"secrets\": {\n    \"username\": \"seu-usuario\",\n    \"password\": \"sua-senha\"\n  }\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/carrier-credentials",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "carrier-credentials"
+          ]
+        },
+        "description": "Ajuste 'gateway' e os campos de 'secrets' conforme a requisição 3.\n\nSó Admin pode escrever. Campo obrigatório ausente devolve 422 dizendo qual falta.\n\nOs segredos nunca voltam: a resposta traz apenas configured_secrets, com os NOMES das chaves preenchidas."
+      }
+    },
+    {
+      "name": "5 · Cotar",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const d = pm.response.json().data;",
+              "pm.collectionVariables.set('quotation_id', d.id);",
+              "console.log(`${d.results.length} resultado(s) das tabelas locais, de imediato`);",
+              "console.log('As transportadoras conectadas respondem depois — veja a requisição 6.');"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nf_number\": \"000123\",\n  \"sender_cnpj\": \"12.345.678/0001-99\",\n  \"receiver_cnpj\": \"98.765.432/0001-88\",\n  \"origin_cep\": \"01000-000\",\n  \"destination_cep\": \"86020-000\",\n  \"weight\": 45,\n  \"boxes\": 10,\n  \"volume\": 0.15,\n  \"cargo_value\": 5000\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/quotations",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quotations"
+          ]
+        },
+        "description": "Responde na hora com os resultados das TABELAS locais e dispara, em segundo plano, uma consulta por transportadora conectada.\n\nGuarda o id em {{quotation_id}}."
+      }
+    },
+    {
+      "name": "6 · Acompanhar a cotação",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const d = pm.response.json().data;",
+              "console.log('--- resultados ---');",
+              "d.results.forEach(r => console.log(",
+              "  `  ${r.carrier_name}: R$ ${r.final_value} / ${r.deadline}d [${r.source}]` +",
+              "  (r.best_price ? ' ← menor preço' : '')",
+              "));",
+              "console.log('--- transportadoras por API ---');",
+              "console.log('  aguardando:', d.carriers.pending.join(', ') || 'nenhuma');",
+              "d.carriers.attempts.forEach(a => console.log(",
+              "  `  ${a.gateway}: ${a.status}${a.message ? ' — ' + a.message : ''}`",
+              "));",
+              "if (d.benchmark.sample) console.log(`--- histórico: mediana R$ ${d.benchmark.median_value} em ${d.benchmark.sample} contrato(s)`);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/quotations/{{quotation_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "quotations",
+            "{{quotation_id}}"
+          ]
+        },
+        "description": "Repita esta requisição enquanto carriers.pending não esvaziar — os resultados de API vão aparecendo.\n\nO console do Postman mostra tudo formatado.\n\nEstados possíveis por transportadora:\n· cotada — devolveu preço\n· nao_atende — não faz essa rota (não é erro)\n· indisponivel — falha da transportadora\n· erro — problema de configuração ou do nosso lado"
+      }
+    },
+    {
+      "name": "7 · Desconectar credencial",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{base_url}}/carrier-credentials/{{credential_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "carrier-credentials",
+            "{{credential_id}}"
+          ]
+        },
+        "description": "Remove a integração. A transportadora volta a cotar apenas pela tabela cadastrada."
+      }
+    }
+  ]
+}
