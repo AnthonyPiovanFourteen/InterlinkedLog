@@ -12,17 +12,6 @@ use App\Domain\Services\QuotationEngineService;
 
 class QuotationEngine implements QuotationEngineService
 {
-    /**
-     * Linhas da tabela de frete que NÃO são taxas somáveis:
-     * - frete_minimo: piso sobre o valor do frete (se o frete calculado for
-     *   menor, cobra-se o mínimo). Não é acréscimo.
-     * - cubagem: fator kg/m³ (300 no rodoviário). Define o peso cubado; o peso
-     *   faturável é o maior entre o real e o cubado. Não é acréscimo.
-     */
-    private const NON_FEE_TYPES = ['frete_minimo', 'cubagem'];
-
-    private const CUBAGE_FACTOR_FALLBACK = 300.0;
-
     public function __construct(
         private CarrierRepository $carrierRepository,
         private FreightTableRepository $freightTableRepository,
@@ -73,13 +62,10 @@ class QuotationEngine implements QuotationEngineService
                 continue;
             }
 
-            $billableWeight = $this->billableWeight($quotation, $table->fees);
-            $weightRange = $this->rangeFor($route['weightRanges'], $billableWeight);
+            $weightRange = $this->rangeFor($route['weightRanges'], $quotation->weight);
 
             $freightValue = $weightRange ? $weightRange['value'] : 0;
             $deadline = $weightRange ? $weightRange['deadline'] : ($route['deadline'] ?? 1);
-
-            $freightValue = max($freightValue, $this->minimumFreight($table->fees));
 
             $totalFees = $this->calculateFees($table->fees, $quotation->cargoValue);
 
@@ -99,40 +85,6 @@ class QuotationEngine implements QuotationEngineService
         $results = $this->rank($results);
 
         return $results;
-    }
-
-    /**
-     * Peso faturável: o maior entre o peso real e o peso cubado
-     * (volume em m³ × fator de cubagem da tabela).
-     */
-    private function billableWeight(Quotation $quotation, array $fees): float
-    {
-        $factor = $this->feeValue($fees, 'cubagem') ?? self::CUBAGE_FACTOR_FALLBACK;
-
-        if ($factor <= 0) {
-            return $quotation->weight;
-        }
-
-        return max($quotation->weight, $quotation->volume * $factor);
-    }
-
-    /**
-     * Piso sobre o valor do frete. Ausente na tabela, não há piso.
-     */
-    private function minimumFreight(array $fees): float
-    {
-        return $this->feeValue($fees, 'frete_minimo') ?? 0.0;
-    }
-
-    private function feeValue(array $fees, string $type): ?float
-    {
-        foreach ($fees as $fee) {
-            if (($fee['type'] ?? '') === $type) {
-                return (float) ($fee['value'] ?? 0);
-            }
-        }
-
-        return null;
     }
 
     /**
@@ -162,9 +114,6 @@ class QuotationEngine implements QuotationEngineService
         // cubagem sobre o peso. Aguarda decisão de negócio; não alterar o cálculo.
         $total = 0.0;
         foreach ($fees as $fee) {
-            if (in_array($fee['type'] ?? '', self::NON_FEE_TYPES, true)) {
-                continue;
-            }
             if (! empty($fee['percentage'])) {
                 $total += $cargoValue * ($fee['percentage'] / 100);
             } else {
@@ -179,9 +128,6 @@ class QuotationEngine implements QuotationEngineService
     {
         $breakdown = [];
         foreach ($fees as $fee) {
-            if (in_array($fee['type'] ?? '', self::NON_FEE_TYPES, true)) {
-                continue;
-            }
             if (! empty($fee['percentage'])) {
                 $amount = $cargoValue * ($fee['percentage'] / 100);
             } else {

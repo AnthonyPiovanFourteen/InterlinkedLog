@@ -221,6 +221,16 @@ Consequências assumidas:
   reconstruída se a tabela mudar em outubro — o `quotation_results` guarda o
   preço final, não a tabela que o gerou. Se a cotação passar a ser vinculante
   (cliente contestando valor), versionamento vira pré-requisito.
+- **`frete_minimo` e `cubagem` continuam somados como taxas em reais.** A
+  semântica provável é piso sobre o frete e fator kg/m³, mas **quem define o
+  valor do frete é a tabela da transportadora**, não o sistema. O modelo atual
+  (`fee_type` / `value` / `is_percentage`) não permite que a tabela declare o
+  comportamento de uma linha, então qualquer interpretação no motor seria o
+  sistema adivinhando pelo nome do campo — e falharia em silêncio para uma
+  transportadora que use outra nomenclatura. **Pré-requisito:** um campo de
+  comportamento em `freight_table_fees` (`flat` / `percentage` /
+  `freight_floor` / `cubage_factor`), preenchido na importação por quem lê o
+  documento da transportadora. Só então o motor aplica sem interpretar.
 - **O `document_number` não é documento fiscal.** Antes usava o prefixo `CT-e `,
   o que dava a impressão de ser um Conhecimento de Transporte emitido pela
   plataforma. Passou a ser `SC-AAAAMMDD-NNNN` (Solicitação de Coleta), coerente

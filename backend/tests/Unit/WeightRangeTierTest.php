@@ -14,11 +14,11 @@ use Mockery;
 use PHPUnit\Framework\TestCase;
 
 /**
- * frete_minimo é piso sobre o frete e cubagem é fator kg/m³ — nenhum dos dois
- * é taxa somável. Cada teste aqui falha no comportamento anterior, que somava
- * os dois como moeda.
+ * As faixas de peso da tabela são degraus contínuos. Comparar contra 'start'
+ * criava lacunas: peso 30,5 não casava em [0,30] nem em [31,100] e o frete
+ * voltava zero, sem erro.
  */
-class PricingSemanticsTest extends TestCase
+class WeightRangeTierTest extends TestCase
 {
     protected function tearDown(): void
     {
@@ -66,57 +66,15 @@ class PricingSemanticsTest extends TestCase
         );
     }
 
-    public function test_cubagem_is_a_factor_not_a_fee(): void
+    public function test_weight_between_declared_ranges_resolves_to_the_next_tier(): void
     {
         $ranges = [
             ['start' => 0, 'end' => 30, 'value' => 85.50, 'deadline' => 2],
             ['start' => 31, 'end' => 100, 'value' => 142.00, 'deadline' => 3],
         ];
-        // Carga leve e volumosa: 10 kg reais, 0,2 m³ → cubado 60 kg.
-        $results = $this->engine($ranges, [['type' => 'cubagem', 'value' => 300, 'percentage' => 0]])
-            ->process($this->quotation(10, 0.2));
 
-        // O peso cubado (60) manda, não o real (10): faixa [31,100] → 142,00.
-        $this->assertSame(142.00, $results[0]['freight_value']);
-        // E a cubagem não entra como taxa.
-        $this->assertSame(0.0, $results[0]['fees']);
-    }
-
-    public function test_frete_minimo_is_a_floor_not_a_fee(): void
-    {
-        $ranges = [['start' => 0, 'end' => 30, 'value' => 20.00, 'deadline' => 2]];
-
-        $results = $this->engine($ranges, [['type' => 'frete_minimo', 'value' => 50, 'percentage' => 0]])
-            ->process($this->quotation(5, 0.01));
-
-        // Frete de tabela (20,00) abaixo do piso (50,00) → cobra-se o piso.
-        $this->assertSame(50.00, $results[0]['freight_value']);
-        $this->assertSame(0.0, $results[0]['fees']);
-    }
-
-    public function test_frete_minimo_does_not_inflate_freight_above_the_floor(): void
-    {
-        $ranges = [['start' => 0, 'end' => 100, 'value' => 142.00, 'deadline' => 3]];
-
-        $results = $this->engine($ranges, [['type' => 'frete_minimo', 'value' => 50, 'percentage' => 0]])
-            ->process($this->quotation(45, 0.15));
-
-        // Frete acima do piso permanece intacto...
-        $this->assertSame(142.00, $results[0]['freight_value']);
-        // ...e o piso não vira taxa. Antes, os 50,00 eram somados aqui.
-        $this->assertSame(0.0, $results[0]['fees']);
-        $this->assertSame(142.00, $results[0]['final_value']);
-    }
-
-    public function test_weight_between_ranges_resolves_to_the_next_tier(): void
-    {
-        $ranges = [
-            ['start' => 0, 'end' => 30, 'value' => 85.50, 'deadline' => 2],
-            ['start' => 31, 'end' => 100, 'value' => 142.00, 'deadline' => 3],
-        ];
-        // 0,1005 m³ × 300 = 30,15 kg — caía na lacuna entre [0,30] e [31,100].
-        $results = $this->engine($ranges, [['type' => 'cubagem', 'value' => 300, 'percentage' => 0]])
-            ->process($this->quotation(1, 0.1005));
+        // 30,5 kg: acima do teto da 1ª faixa, abaixo do piso declarado da 2ª.
+        $results = $this->engine($ranges, [])->process($this->quotation(30.5, 0.01));
 
         $this->assertSame(142.00, $results[0]['freight_value']);
         $this->assertSame(3, $results[0]['deadline']);
