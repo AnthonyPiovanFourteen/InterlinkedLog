@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   ScrollText,
   LogOut,
-  PackageSearch,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,9 +49,12 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <PackageSearch className="h-4 w-4" />
-          </div>
+          <img
+            src="/logo-mark.png"
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-8 shrink-0 object-contain"
+          />
           <div className="flex flex-col leading-tight group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold tracking-tight">InterlinkedLog</span>
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground">

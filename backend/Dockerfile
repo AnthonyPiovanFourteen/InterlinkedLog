@@ -5,8 +5,9 @@ FROM php:8.4-fpm-alpine@sha256:49734670eccf414af884c2a0c2e558401e228615f8028f1c9
 
 SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
-RUN apk add --no-cache nginx=1.30.4-r1 sqlite-dev=3.53.4-r0 curl=8.21.0-r0 \
-    && docker-php-ext-install pdo pdo_sqlite pdo_mysql
+# libpng + gd: o dompdf exige GD para embutir imagem (o logo no PDF de coleta).
+RUN apk add --no-cache nginx=1.30.4-r1 sqlite-dev=3.53.4-r0 curl=8.21.0-r0 libpng-dev=1.6.58-r1 \
+    && docker-php-ext-install pdo pdo_sqlite pdo_mysql gd
 
 WORKDIR /app
 

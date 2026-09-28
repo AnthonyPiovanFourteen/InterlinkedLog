@@ -7,6 +7,7 @@
     @page { margin: 20mm 15mm; }
     body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1a1a1a; line-height: 1.5; }
     .logo { text-align: center; margin-bottom: 8px; }
+    .logo img { display: block; margin: 0 auto 4px; }
     .logo h1 { font-size: 22px; margin: 0; color: #2563eb; }
     .logo span { font-size: 10px; color: #666; text-transform: uppercase; letter-spacing: 2px; }
     .title { text-align: center; border: 2px solid #2563eb; padding: 6px; margin: 12px 0; }
@@ -29,7 +30,12 @@
 </head>
 <body>
   <div class="logo">
-    <h1>InterlinkedLog</h1>
+    {{-- Caminho de arquivo, não URL: o dompdf renderiza offline e não busca na rede. --}}
+    @if (file_exists($logoPath = public_path('logo.png')))
+      <img src="{{ $logoPath }}" alt="InterlinkedLog" style="height: 52px;">
+    @else
+      <h1>InterlinkedLog</h1>
+    @endif
     <span>Plataforma de Gestão de Fretes</span>
   </div>
 

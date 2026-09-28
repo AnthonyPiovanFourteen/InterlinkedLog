@@ -1,10 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { PackageSearch, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/login")({
@@ -39,9 +39,12 @@ function LoginPage() {
       <div className="hidden lg:flex flex-col justify-between p-10 bg-primary text-primary-foreground relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 [background-image:linear-gradient(var(--primary-foreground)_1px,transparent_1px),linear-gradient(90deg,var(--primary-foreground)_1px,transparent_1px)] [background-size:32px_32px]" />
         <div className="relative flex items-center gap-2 text-sm font-semibold">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary-foreground/15 backdrop-blur">
-            <PackageSearch className="h-4 w-4" />
-          </div>
+          <img
+            src="/logo-mark.png"
+            alt=""
+            aria-hidden="true"
+            className="h-9 w-9 shrink-0 rounded-md bg-primary-foreground/90 p-1 object-contain"
+          />
           InterlinkedLog
         </div>
         <div className="relative space-y-3">
@@ -57,6 +60,13 @@ function LoginPage() {
       <div className="flex items-center justify-center p-6">
         <Card className="w-full max-w-md border-border/70 shadow-none">
           <CardContent className="p-8 space-y-6">
+            {/* O painel da esquerda some em telas pequenas — sem isto, o login
+                ficaria sem nenhuma marca no celular. */}
+            <img
+              src="/logo.png"
+              alt="InterlinkedLog"
+              className="mx-auto h-16 w-auto object-contain lg:hidden"
+            />
             <div className="space-y-1.5">
               <h2 className="text-xl font-semibold tracking-tight">Entrar na sua conta</h2>
               <p className="text-sm text-muted-foreground">Acesse o painel da sua organização.</p>
