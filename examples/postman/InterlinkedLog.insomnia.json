@@ -1,0 +1,159 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_source": "insomnia.desktop.app:v8",
+  "resources": [
+    {
+      "_id": "wrk_interlinkedlog",
+      "_type": "workspace",
+      "name": "InterlinkedLog — Transportadoras",
+      "description": "Fluxo de integração com transportadoras.\n\nO backend não expõe porta: tudo passa por http://localhost:3000/api/v1, que é o proxy do frontend.\n\nO token é puxado da resposta do login automaticamente, sem script — o Insomnia faz isso com referência entre requisições. Basta enviar o login uma vez e as demais já funcionam.",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "parentId": "wrk_interlinkedlog",
+      "name": "Local",
+      "data": {
+        "base_url": "http://localhost:3000/api/v1",
+        "email": "admin@interlinked.io",
+        "senha": "admin123",
+        "gateway": "braspress"
+      },
+      "metaSortKey": 1
+    },
+    {
+      "_id": "req_1_login",
+      "_type": "request",
+      "parentId": "wrk_interlinkedlog",
+      "name": "1 · Entrar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/login",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"{{ _.email }}\",\n  \"password\": \"{{ _.senha }}\"\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "description": "Envie uma vez. As demais requisições puxam o token daqui sozinhas.\n\nLimite de 5 tentativas por minuto — errar a senha várias vezes devolve 429.",
+      "metaSortKey": -100
+    },
+    {
+      "_id": "req_2_carriers",
+      "_type": "request",
+      "parentId": "wrk_interlinkedlog",
+      "name": "2 · Transportadoras e quais têm API",
+      "method": "GET",
+      "url": "{{ _.base_url }}/carriers",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_1_login', '$.token', 'never', 60 %}"
+        }
+      ],
+      "description": "Cada item traz:\n· gateway — qual adaptador a atende, ou null se for só por tabela\n· integrated — se esta empresa já configurou credencial\n\nAnote o id de uma que tenha gateway: a requisição 4 usa esse valor.",
+      "metaSortKey": -90
+    },
+    {
+      "_id": "req_3_gateways",
+      "_type": "request",
+      "parentId": "wrk_interlinkedlog",
+      "name": "3 · O que cada API exige",
+      "method": "GET",
+      "url": "{{ _.base_url }}/carrier-credentials/gateways",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_1_login', '$.token', 'never', 60 %}"
+        }
+      ],
+      "description": "Os cinco adaptadores, os campos que cada um exige, a explicação de cada campo e o link da documentação oficial.\n\nÉ o que a tela usa para montar o formulário sozinha.",
+      "metaSortKey": -80
+    },
+    {
+      "_id": "req_4_conectar",
+      "_type": "request",
+      "parentId": "wrk_interlinkedlog",
+      "name": "4 · Conectar credencial",
+      "method": "POST",
+      "url": "{{ _.base_url }}/carrier-credentials",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"carrier_id\": \"{% response 'body', 'req_2_carriers', '$.data[?(@.gateway=='braspress')].id', 'never', 60 %}\",\n  \"gateway\": \"{{ _.gateway }}\",\n  \"secrets\": {\n    \"username\": \"seu-usuario\",\n    \"password\": \"sua-senha\"\n  }\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_1_login', '$.token', 'never', 60 %}"
+        }
+      ],
+      "description": "O carrier_id vem da requisição 2, filtrando a transportadora cujo adaptador é 'braspress'.\n\nPara conectar outra, troque nos DOIS lugares: o valor de \"gateway\" no corpo e o filtro do carrier_id (…@.gateway=='jamef'…).\n\nAjuste os campos de \"secrets\" conforme a requisição 3 — cada transportadora exige campos diferentes.\n\nSó Admin pode escrever. Campo obrigatório ausente devolve 422 dizendo qual falta.\n\nOs segredos nunca voltam: a resposta traz apenas configured_secrets, com os NOMES das chaves preenchidas.",
+      "metaSortKey": -70
+    },
+    {
+      "_id": "req_5_cotar",
+      "_type": "request",
+      "parentId": "wrk_interlinkedlog",
+      "name": "5 · Cotar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/quotations",
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nf_number\": \"000123\",\n  \"sender_cnpj\": \"12.345.678/0001-99\",\n  \"receiver_cnpj\": \"98.765.432/0001-88\",\n  \"origin_cep\": \"01000-000\",\n  \"destination_cep\": \"86020-000\",\n  \"weight\": 45,\n  \"boxes\": 10,\n  \"volume\": 0.15,\n  \"cargo_value\": 5000\n}"
+      },
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        },
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_1_login', '$.token', 'never', 60 %}"
+        }
+      ],
+      "description": "Responde na hora com os resultados das TABELAS locais e dispara, em segundo plano, uma consulta por transportadora conectada.",
+      "metaSortKey": -60
+    },
+    {
+      "_id": "req_6_acompanhar",
+      "_type": "request",
+      "parentId": "wrk_interlinkedlog",
+      "name": "6 · Acompanhar a cotação",
+      "method": "GET",
+      "url": "{{ _.base_url }}/quotations/{% response 'body', 'req_5_cotar', '$.data.id', 'never', 60 %}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_1_login', '$.token', 'never', 60 %}"
+        }
+      ],
+      "description": "O id vem da requisição 5 automaticamente.\n\nReenvie enquanto carriers.pending não esvaziar — os resultados de API vão aparecendo.\n\nEstados por transportadora:\n· cotada — devolveu preço\n· nao_atende — não faz essa rota (não é erro)\n· indisponivel — falha da transportadora\n· erro — problema de configuração ou do nosso lado\n\nCada resultado traz 'source': tabela ou api.",
+      "metaSortKey": -50
+    },
+    {
+      "_id": "req_7_desconectar",
+      "_type": "request",
+      "parentId": "wrk_interlinkedlog",
+      "name": "7 · Desconectar credencial",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/carrier-credentials/{% response 'body', 'req_4_conectar', '$.data.id', 'never', 60 %}",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {% response 'body', 'req_1_login', '$.token', 'never', 60 %}"
+        }
+      ],
+      "description": "Remove a integração. A transportadora volta a cotar apenas pela tabela cadastrada.",
+      "metaSortKey": -40
+    }
+  ]
+}
