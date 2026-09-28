@@ -33,6 +33,8 @@ class Contract extends Model
         'cte_number',
         'cancelled_at',
         'cancel_reason',
+        'tracking_mode',
+        'tracking_gateway',
     ];
 
     protected function casts(): array

@@ -4,6 +4,12 @@ namespace App\Domain\Entities;
 
 class Contract
 {
+    /** Rastreio alimentado pela API da transportadora. */
+    public const TRACKING_AUTO = 'automatico';
+
+    /** Rastreio digitado pela equipe. */
+    public const TRACKING_MANUAL = 'manual';
+
     public const STATUS_SCHEDULED = 'Agendado';
 
     public const STATUS_COLLECTED = 'Coletado';
@@ -39,7 +45,14 @@ class Contract
         public readonly ?string $cancelReason = null,
         public readonly string $createdAt = '',
         public readonly string $updatedAt = '',
+        public readonly string $trackingMode = self::TRACKING_MANUAL,
+        public readonly ?string $trackingGateway = null,
     ) {}
+
+    public function isAutoTracked(): bool
+    {
+        return $this->trackingMode === self::TRACKING_AUTO;
+    }
 
     public static function fromQuotation(
         string $id,
@@ -49,6 +62,8 @@ class Contract
         string $originCity, string $destinationCity, string $destinationState,
         float $freightValue, float $fees, float $finalValue, int $deadline,
         ?string $cteNumber = null,
+        string $trackingMode = self::TRACKING_MANUAL,
+        ?string $trackingGateway = null,
     ): self {
         return new self(
             id: $id, companyId: $companyId, quotationId: $quotationId,
@@ -58,6 +73,8 @@ class Contract
             destinationState: $destinationState,
             freightValue: $freightValue, fees: $fees,
             finalValue: $finalValue, deadline: $deadline,
+            trackingMode: $trackingMode,
+            trackingGateway: $trackingGateway,
             status: self::STATUS_SCHEDULED,
             documentNumber: $documentNumber,
             cteNumber: $cteNumber,

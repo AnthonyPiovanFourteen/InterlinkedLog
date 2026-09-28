@@ -59,6 +59,8 @@ class EloquentContractRepository implements ContractRepository
                 'cte_number' => $contract->cteNumber,
                 'cancelled_at' => $contract->cancelledAt,
                 'cancel_reason' => $contract->cancelReason,
+                'tracking_mode' => $contract->trackingMode,
+                'tracking_gateway' => $contract->trackingGateway,
                 'created_at' => $contract->createdAt ?: now(),
                 'updated_at' => $contract->updatedAt ?: now(),
             ]
@@ -88,6 +90,8 @@ class EloquentContractRepository implements ContractRepository
             cancelReason: $model->cancel_reason,
             createdAt: $model->created_at?->toIso8601String() ?? '',
             updatedAt: $model->updated_at?->toIso8601String() ?? '',
+            trackingMode: $model->tracking_mode ?? ContractEntity::TRACKING_MANUAL,
+            trackingGateway: $model->tracking_gateway,
         );
     }
 }

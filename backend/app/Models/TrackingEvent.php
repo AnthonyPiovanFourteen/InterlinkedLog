@@ -11,6 +11,8 @@ class TrackingEvent extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'origin',
+        'external_id',
         'id',
         'contract_id',
         'title',

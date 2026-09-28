@@ -20,8 +20,15 @@ class EloquentTrackingEventRepository implements TrackingEventRepository
     public function save(TrackingEventEntity $event): void
     {
         $id = $event->id ?? Str::orderedUuid()->toString();
+
+        // Evento vindo da API é identificado pela chave da transportadora, não
+        // pelo nosso id: assim o sincronismo pode rodar quantas vezes quiser.
+        $key = $event->externalId !== null
+            ? ['contract_id' => $event->contractId, 'external_id' => $event->externalId]
+            : ['id' => $id];
+
         TrackingEvent::updateOrCreate(
-            ['id' => $id],
+            $key,
             [
                 'id' => $id,
                 'contract_id' => $event->contractId,
@@ -29,6 +36,8 @@ class EloquentTrackingEventRepository implements TrackingEventRepository
                 'date' => $event->date,
                 'time' => $event->time,
                 'observation' => $event->observation,
+                'origin' => $event->origin,
+                'external_id' => $event->externalId,
                 'created_at' => $event->createdAt ?: now(),
             ]
         );
@@ -44,6 +53,8 @@ class EloquentTrackingEventRepository implements TrackingEventRepository
             time: $model->time,
             observation: $model->observation ?? '',
             createdAt: $model->created_at?->toIso8601String() ?? '',
+            origin: $model->origin ?? TrackingEventEntity::ORIGIN_MANUAL,
+            externalId: $model->external_id,
         );
     }
 }

@@ -8,6 +8,7 @@ use App\Domain\Entities\TrackingEvent;
 use App\Domain\Exceptions\CarrierNotInResultsException;
 use App\Domain\Exceptions\QuotationNotFoundException;
 use App\Domain\Exceptions\QuotationNotValidException;
+use App\Domain\Repositories\CarrierCredentialRepository;
 use App\Domain\Repositories\ContractRepository;
 use App\Domain\Repositories\QuotationRepository;
 use App\Domain\Repositories\TrackingEventRepository;
@@ -21,6 +22,7 @@ class CreateContractUseCase
         private ContractRepository $contractRepository,
         private TrackingEventRepository $trackingRepository,
         private TransactionManager $transactionManager,
+        private CarrierCredentialRepository $credentials,
     ) {}
 
     public function execute(string $quotationId, string $carrierId, string $companyId): Contract
@@ -48,6 +50,13 @@ class CreateContractUseCase
                 throw new CarrierNotInResultsException;
             }
 
+            // Rastreio automático quando a transportadora tem API com
+            // credencial ativa; manual caso contrário. Definido aqui e imutável:
+            // os dois modos não se misturam.
+            $credential = $this->credentials->findForCarrier($companyId, $selectedResult['carrier_id']);
+            $trackingMode = $credential ? Contract::TRACKING_AUTO : Contract::TRACKING_MANUAL;
+            $trackingGateway = $credential?->gateway;
+
             $contract = Contract::fromQuotation(
                 id: Str::orderedUuid()->toString(),
                 documentNumber: 'SC-'.date('Ymd').'-'.str_pad((string) rand(1, 9999), 4, '0', STR_PAD_LEFT),
@@ -63,6 +72,8 @@ class CreateContractUseCase
                 fees: $selectedResult['fees'],
                 finalValue: $selectedResult['final_value'],
                 deadline: $selectedResult['deadline'],
+                trackingMode: $trackingMode,
+                trackingGateway: $trackingGateway,
             );
 
             $this->contractRepository->save($contract);
