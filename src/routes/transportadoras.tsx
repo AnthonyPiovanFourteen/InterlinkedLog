@@ -35,6 +35,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PageHeader } from "@/shared/components/molecules/PageHeader";
 import { StatusBadge } from "@/shared/components/atoms/StatusBadge";
 import { api } from "@/lib/api";
@@ -84,6 +85,98 @@ export const Route = createFileRoute("/transportadoras")({
   head: () => ({ meta: [{ title: "Transportadoras · InterlinkedLog" }] }),
   component: TransportadorasPage,
 });
+
+/**
+ * O que a tabela de frete precisa conter. Descreve o contrato real aceito por
+ * POST /freight-tables — origem, rotas com prazo, faixas de peso e taxas.
+ */
+function FreightTableHelp() {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-label="O que a tabela de frete precisa conter"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <Info className="h-4 w-4" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="right" align="start" className="max-h-[70vh] w-96 overflow-y-auto">
+        <div className="space-y-3 text-xs leading-relaxed">
+          <div>
+            <p className="text-sm font-semibold">Como deve ser a tabela de frete</p>
+            <p className="text-muted-foreground mt-1">
+              Transportadora sem API cota por tabela. Depois de cadastrá-la aqui, envie a tabela que
+              ela negociou com você — é dela que sai o preço.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-medium">1. Identificação e validade</p>
+            <p className="text-muted-foreground">
+              Nome da tabela, cidade de origem, e o período em que vale (início e fim). Fora desse
+              período a tabela não é usada na cotação.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-medium">2. Rotas atendidas</p>
+            <p className="text-muted-foreground">
+              Cidade e UF de destino, com o prazo em dias. A transportadora só aparece na cotação se
+              a rota estiver listada — destino ausente significa &quot;não atende&quot;.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-medium">3. Faixas de peso</p>
+            <p className="text-muted-foreground">
+              Peso inicial, peso final e o valor do frete. As faixas são degraus contínuos:
+            </p>
+            <pre className="bg-muted mt-1.5 rounded p-2 font-mono text-[11px] leading-snug">
+              {`0 – 30 kg     R$ 145,00
+31 – 100 kg   R$ 260,00
+101 – 300 kg  R$ 480,00`}
+            </pre>
+          </div>
+
+          <div>
+            <p className="font-medium">4. Taxas</p>
+            <p className="text-muted-foreground">
+              Cada taxa tem um tipo e um valor — em reais, ou em percentual sobre o valor da
+              mercadoria. Os tipos usuais:
+            </p>
+            <ul className="text-muted-foreground mt-1.5 space-y-0.5">
+              <li>
+                <span className="text-foreground font-medium">ad_valorem</span> — percentual sobre a
+                nota
+              </li>
+              <li>
+                <span className="text-foreground font-medium">gris</span> — gerenciamento de risco
+              </li>
+              <li>
+                <span className="text-foreground font-medium">pedagio</span> — percentual ou valor
+                fixo
+              </li>
+              <li>
+                <span className="text-foreground font-medium">despacho</span>,{" "}
+                <span className="text-foreground font-medium">tde</span> — valores fixos
+              </li>
+              <li>
+                <span className="text-foreground font-medium">frete_minimo</span> — piso do frete
+              </li>
+            </ul>
+          </div>
+
+          <p className="text-muted-foreground border-t pt-2">
+            Há tabelas de exemplo prontas em <code className="text-foreground">examples/</code>, em
+            JSON e XLSX, com a estrutura completa.
+          </p>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function TransportadorasPage() {
   const queryClient = useQueryClient();
@@ -179,8 +272,14 @@ function TransportadorasPage() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
               <DialogHeader>
-                <DialogTitle>Nova Transportadora</DialogTitle>
-                <DialogDescription>Cadastre uma transportadora parceira.</DialogDescription>
+                <DialogTitle className="flex items-center gap-2">
+                  Nova Transportadora
+                  <FreightTableHelp />
+                </DialogTitle>
+                <DialogDescription>
+                  Cadastre uma transportadora parceira. Sem integração de API, a cotação dela vem da
+                  tabela de frete que você enviar.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-3 py-2">
                 <div className="space-y-1.5">
