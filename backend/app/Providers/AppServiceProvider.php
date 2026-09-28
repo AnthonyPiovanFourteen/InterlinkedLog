@@ -24,6 +24,7 @@ use App\Domain\Services\TransactionManager;
 use App\Http\Controllers\Api\CarrierCredentialController;
 use App\Infrastructure\Gateways\BraspressGateway;
 use App\Infrastructure\Gateways\JadlogGateway;
+use App\Infrastructure\Gateways\JadlogTrackingGateway;
 use App\Infrastructure\Gateways\LoggiGateway;
 use App\Infrastructure\Gateways\RodonavesGateway;
 use App\Infrastructure\Repositories\Eloquent\EloquentAuditLogRepository;
@@ -78,6 +79,9 @@ class AppServiceProvider extends ServiceProvider
             JadlogGateway::class,
             RodonavesGateway::class,
         ], 'carrier.gateways');
+
+        // Rastreio é porta separada: nem toda transportadora que cota rastreia.
+        $this->app->tag([JadlogTrackingGateway::class], 'tracking.gateways');
 
         $this->app->when(CarrierCredentialController::class)
             ->needs('$gateways')
