@@ -48,6 +48,7 @@ class CarrierCredentialController extends Controller
                 'required_secrets' => $gateway->requiredSecrets(),
                 // O que cada campo é, para a tela orientar quem configura.
                 'secret_hints' => $gateway->secretHints(),
+                'documentation_url' => $gateway->documentationUrl(),
             ];
         }
 

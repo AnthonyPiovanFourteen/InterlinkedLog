@@ -11,6 +11,7 @@ import {
   PlugZap,
   Trash2,
   Info,
+  ExternalLink,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,8 @@ interface GatewayInfo {
   required_secrets: string[];
   /** O que cada segredo é — vem do adaptador, não do frontend. */
   secret_hints: Record<string, string>;
+  /** Documentação oficial da API, quando a transportadora publica. */
+  documentation_url: string | null;
 }
 interface CredentialItem {
   id: string;
@@ -106,8 +109,8 @@ function TransportadorasPage() {
   });
 
   // A explicação de cada campo vem do adaptador, via /carrier-credentials/gateways.
-  const hintFor = (key: string) =>
-    gatewaysData?.find((g) => g.name === integrating?.gateway)?.secret_hints?.[key] ?? "";
+  const gatewayInfo = () => gatewaysData?.find((g) => g.name === integrating?.gateway);
+  const hintFor = (key: string) => gatewayInfo()?.secret_hints?.[key] ?? "";
 
   const saveCredential = useMutation({
     mutationFn: (body: { carrier_id: string; gateway: string; secrets: Record<string, string> }) =>
@@ -439,9 +442,7 @@ function TransportadorasPage() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 py-2">
-              {(
-                gatewaysData?.find((g) => g.name === integrating?.gateway)?.required_secrets ?? []
-              ).map((key) => (
+              {(gatewayInfo()?.required_secrets ?? []).map((key) => (
                 <div key={key} className="space-y-1.5">
                   <div className="flex items-center gap-1.5">
                     <Label className="capitalize">{key.replace(/_/g, " ")}</Label>
@@ -474,6 +475,21 @@ function TransportadorasPage() {
                 </div>
               ))}
             </div>
+            {gatewayInfo()?.documentation_url && (
+              <p className="text-muted-foreground border-t pt-3 text-xs">
+                Para mais instruções, consulte a{" "}
+                <a
+                  href={gatewayInfo()!.documentation_url!}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-foreground font-medium underline underline-offset-2"
+                >
+                  documentação oficial da API
+                  <ExternalLink className="ml-0.5 inline h-3 w-3 align-[-1px]" />
+                </a>
+                .
+              </p>
+            )}
             <DialogFooter>
               <Button
                 variant="outline"

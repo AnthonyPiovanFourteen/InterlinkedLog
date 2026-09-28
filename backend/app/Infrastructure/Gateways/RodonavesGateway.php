@@ -63,6 +63,11 @@ class RodonavesGateway implements CarrierGateway
         ];
     }
 
+    public function documentationUrl(): ?string
+    {
+        return 'https://dev.rodonaves.com.br/';
+    }
+
     public function supports(Carrier $carrier): bool
     {
         $name = mb_strtolower($carrier->name);

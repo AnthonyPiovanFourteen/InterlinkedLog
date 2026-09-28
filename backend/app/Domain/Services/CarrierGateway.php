@@ -36,6 +36,13 @@ interface CarrierGateway
      */
     public function secretHints(): array;
 
+    /**
+     * Documentação oficial da API, para quem estiver configurando conferir os
+     * campos na fonte. Null quando a transportadora não publica documentação
+     * aberta.
+     */
+    public function documentationUrl(): ?string;
+
     /** Se este gateway atende a transportadora informada. */
     public function supports(Carrier $carrier): bool;
 

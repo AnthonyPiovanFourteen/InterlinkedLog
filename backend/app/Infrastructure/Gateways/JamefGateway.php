@@ -61,6 +61,11 @@ class JamefGateway implements CarrierGateway
         ];
     }
 
+    public function documentationUrl(): ?string
+    {
+        return 'https://developers.jamef.com.br/documentacao';
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'jamef');

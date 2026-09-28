@@ -58,6 +58,11 @@ class LoggiGateway implements CarrierGateway
         ];
     }
 
+    public function documentationUrl(): ?string
+    {
+        return 'https://docs.api.loggi.com/';
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'loggi');

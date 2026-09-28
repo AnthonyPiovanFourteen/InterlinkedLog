@@ -52,6 +52,11 @@ class JadlogGateway implements CarrierGateway
         ];
     }
 
+    public function documentationUrl(): ?string
+    {
+        return 'https://www.jadlog.com.br/jadlog/arquivos/api_integracao.pdf';
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'jadlog');

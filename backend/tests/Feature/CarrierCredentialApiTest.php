@@ -56,6 +56,12 @@ class CarrierCredentialApiTest extends ApiTestCase
         // Uma amostra do conteúdo, para a explicação não virar placeholder.
         $jamef = $gateways->firstWhere('name', 'jamef');
         $this->assertStringContainsString('CNPJ', $jamef['secret_hints']['documento_devedor']);
+
+        // E todo gateway aponta para a documentação oficial.
+        foreach ($gateways as $gateway) {
+            $this->assertNotNull($gateway['documentation_url'], $gateway['name']);
+            $this->assertStringStartsWith('https://', $gateway['documentation_url']);
+        }
     }
 
     public function test_store_creates_credential_without_ever_returning_secrets(): void

@@ -50,6 +50,11 @@ class BraspressGateway implements CarrierGateway
         ];
     }
 
+    public function documentationUrl(): ?string
+    {
+        return 'https://api.braspress.com/home';
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'braspress');
