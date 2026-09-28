@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domain\Repositories\AuditLogRepository;
+use App\Domain\Repositories\CarrierCredentialRepository;
 use App\Domain\Repositories\CarrierRepository;
 use App\Domain\Repositories\CompanyRepository;
 use App\Domain\Repositories\ContractRepository;
@@ -12,11 +13,14 @@ use App\Domain\Repositories\SystemLogRepository;
 use App\Domain\Repositories\TrackingEventRepository;
 use App\Domain\Repositories\UserRepository;
 use App\Domain\Services\AuthService;
+use App\Domain\Services\CarrierQuoteShadowRunner;
 use App\Domain\Services\CepLookupService;
 use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
 use App\Domain\Services\TransactionManager;
+use App\Infrastructure\Gateways\BraspressGateway;
 use App\Infrastructure\Repositories\Eloquent\EloquentAuditLogRepository;
+use App\Infrastructure\Repositories\Eloquent\EloquentCarrierCredentialRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentCarrierRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentCompanyRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentContractRepository;
@@ -26,6 +30,7 @@ use App\Infrastructure\Repositories\Eloquent\EloquentSystemLogRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentTrackingEventRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentUserRepository;
 use App\Infrastructure\Services\DatabaseTransactionManager;
+use App\Infrastructure\Services\LoggingCarrierQuoteShadowRunner;
 use App\Infrastructure\Services\QuotationEngine;
 use App\Infrastructure\Services\ReportGenerator;
 use App\Infrastructure\Services\TokenAuthService;
@@ -42,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(UserRepository::class, EloquentUserRepository::class);
         $this->app->singleton(CompanyRepository::class, EloquentCompanyRepository::class);
         $this->app->singleton(CarrierRepository::class, EloquentCarrierRepository::class);
+        $this->app->singleton(CarrierCredentialRepository::class, EloquentCarrierCredentialRepository::class);
         $this->app->singleton(FreightTableRepository::class, EloquentFreightTableRepository::class);
         $this->app->singleton(QuotationRepository::class, EloquentQuotationRepository::class);
         $this->app->singleton(ContractRepository::class, EloquentContractRepository::class);
@@ -50,6 +56,17 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SystemLogRepository::class, EloquentSystemLogRepository::class);
         $this->app->singleton(AuthService::class, TokenAuthService::class);
         $this->app->singleton(QuotationEngineService::class, QuotationEngine::class);
+
+        // Gateways de cotação ao vivo. Adicionar transportadora nova é
+        // acrescentar um adaptador a esta lista.
+        $this->app->tag([BraspressGateway::class], 'carrier.gateways');
+
+        $this->app->singleton(CarrierQuoteShadowRunner::class, fn ($app) => new LoggingCarrierQuoteShadowRunner(
+            $app->tagged('carrier.gateways'),
+            $app->make(CarrierRepository::class),
+            $app->make(CarrierCredentialRepository::class),
+            $app->make(SystemLogRepository::class),
+        ));
         $this->app->singleton(CepLookupService::class, ViaCepLookupService::class);
         $this->app->singleton(TransactionManager::class, DatabaseTransactionManager::class);
         $this->app->singleton(ReportService::class, ReportGenerator::class);
