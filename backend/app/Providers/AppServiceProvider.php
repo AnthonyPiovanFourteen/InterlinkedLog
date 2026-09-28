@@ -18,6 +18,7 @@ use App\Domain\Services\CepLookupService;
 use App\Domain\Services\QuotationEngineService;
 use App\Domain\Services\ReportService;
 use App\Domain\Services\TransactionManager;
+use App\Http\Controllers\Api\CarrierCredentialController;
 use App\Infrastructure\Gateways\BraspressGateway;
 use App\Infrastructure\Gateways\JadlogGateway;
 use App\Infrastructure\Gateways\LoggiGateway;
@@ -68,6 +69,10 @@ class AppServiceProvider extends ServiceProvider
             JadlogGateway::class,
             RodonavesGateway::class,
         ], 'carrier.gateways');
+
+        $this->app->when(CarrierCredentialController::class)
+            ->needs('$gateways')
+            ->give(fn ($app) => $app->tagged('carrier.gateways'));
 
         $this->app->singleton(CarrierQuoteShadowRunner::class, fn ($app) => new LoggingCarrierQuoteShadowRunner(
             $app->tagged('carrier.gateways'),

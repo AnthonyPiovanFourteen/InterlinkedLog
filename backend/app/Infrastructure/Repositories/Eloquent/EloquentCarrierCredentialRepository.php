@@ -28,6 +28,27 @@ class EloquentCarrierCredentialRepository implements CarrierCredentialRepository
         return $model ? $this->toEntity($model) : null;
     }
 
+    public function allForCompany(string $companyId): array
+    {
+        return CarrierCredential::where('company_id', $companyId)
+            ->orderBy('gateway')
+            ->get()
+            ->map(fn ($m) => $this->toEntity($m))
+            ->all();
+    }
+
+    public function findById(string $companyId, string $id): ?CredentialEntity
+    {
+        $model = CarrierCredential::where('company_id', $companyId)->find($id);
+
+        return $model ? $this->toEntity($model) : null;
+    }
+
+    public function delete(string $companyId, string $id): void
+    {
+        CarrierCredential::where('company_id', $companyId)->where('id', $id)->delete();
+    }
+
     public function save(CredentialEntity $credential): void
     {
         $id = $credential->id ?? Str::orderedUuid()->toString();

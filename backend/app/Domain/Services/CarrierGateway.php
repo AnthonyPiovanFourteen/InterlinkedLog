@@ -18,6 +18,15 @@ interface CarrierGateway
     /** Identificador estável do gateway, usado em log e configuração. */
     public function name(): string;
 
+    /**
+     * Chaves de segredo que este gateway exige na credencial. Declarado pelo
+     * adaptador, não pelo controller: quem sabe o que a API precisa é quem
+     * fala com ela.
+     *
+     * @return array<int,string>
+     */
+    public function requiredSecrets(): array;
+
     /** Se este gateway atende a transportadora informada. */
     public function supports(Carrier $carrier): bool;
 

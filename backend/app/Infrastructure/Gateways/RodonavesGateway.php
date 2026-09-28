@@ -50,6 +50,11 @@ class RodonavesGateway implements CarrierGateway
         return 'rodonaves';
     }
 
+    public function requiredSecrets(): array
+    {
+        return ['username', 'password'];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         $name = mb_strtolower($carrier->name);

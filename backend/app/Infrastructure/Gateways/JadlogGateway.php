@@ -38,6 +38,11 @@ class JadlogGateway implements CarrierGateway
         return 'jadlog';
     }
 
+    public function requiredSecrets(): array
+    {
+        return ['token', 'modalidade', 'cubage_factor'];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'jadlog');

@@ -44,6 +44,11 @@ class LoggiGateway implements CarrierGateway
         return 'loggi';
     }
 
+    public function requiredSecrets(): array
+    {
+        return ['client_id', 'client_secret', 'company_id'];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'loggi');

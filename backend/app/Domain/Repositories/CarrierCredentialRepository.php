@@ -11,5 +11,12 @@ interface CarrierCredentialRepository
 
     public function findForCarrier(string $companyId, string $carrierId): ?CarrierCredential;
 
+    /** Todas as credenciais do tenant, ativas ou não, para listagem. */
+    public function allForCompany(string $companyId): array;
+
+    public function findById(string $companyId, string $id): ?CarrierCredential;
+
     public function save(CarrierCredential $credential): void;
+
+    public function delete(string $companyId, string $id): void;
 }

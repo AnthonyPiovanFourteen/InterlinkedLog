@@ -37,6 +37,11 @@ class BraspressGateway implements CarrierGateway
         return 'braspress';
     }
 
+    public function requiredSecrets(): array
+    {
+        return ['username', 'password'];
+    }
+
     public function supports(Carrier $carrier): bool
     {
         return str_contains(mb_strtolower($carrier->name), 'braspress');

@@ -72,6 +72,25 @@ abstract class ApiTestCase extends TestCase
         ];
     }
 
+    /** Usuário não-admin no MESMO tenant do admin, para testar autorização. */
+    protected function createTenantUser(string $email, string $name = 'Operador'): array
+    {
+        User::create([
+            'id' => Str::orderedUuid()->toString(),
+            'company_id' => $this->adminCompanyId,
+            'name' => $name,
+            'email' => $email,
+            'password' => bcrypt('admin123'),
+            'role' => 'Usuário',
+            'status' => 'Ativo',
+        ]);
+
+        $login = $this->postJson('/api/v1/login', ['email' => $email, 'password' => 'admin123']);
+        $login->assertOk();
+
+        return ['token' => $login->json('token'), 'company_id' => $login->json('user.company_id')];
+    }
+
     protected function createQuotation(?string $token = null, array $overrides = []): array
     {
         $response = $this->postJson('/api/v1/quotations', array_merge([

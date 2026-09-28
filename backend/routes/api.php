@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuditLogController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CarrierController;
+use App\Http\Controllers\Api\CarrierCredentialController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\ContractController;
 use App\Http\Controllers\Api\FreightTableController;
@@ -24,6 +25,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('users', UserController::class);
         Route::apiResource('companies', CompanyController::class)->only(['show']);
         Route::apiResource('carriers', CarrierController::class);
+        Route::get('carrier-credentials/gateways', [CarrierCredentialController::class, 'gateways']);
+        Route::get('carrier-credentials', [CarrierCredentialController::class, 'index']);
+        Route::post('carrier-credentials', [CarrierCredentialController::class, 'store']);
+        Route::patch('carrier-credentials/{id}', [CarrierCredentialController::class, 'update']);
+        Route::delete('carrier-credentials/{id}', [CarrierCredentialController::class, 'destroy']);
+
         Route::apiResource('freight-tables', FreightTableController::class);
 
         Route::get('quotations', [QuotationController::class, 'index']);
