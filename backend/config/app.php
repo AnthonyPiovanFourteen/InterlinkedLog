@@ -29,6 +29,25 @@ return [
     'env' => env('APP_ENV', 'production'),
 
     /*
+     * Modo demonstração: popula transportadoras, tabelas de frete, cotações e
+     * contratos fictícios no primeiro boot. Desligado por padrão — sistema novo
+     * começa vazio, com apenas o administrador criado por app:create-admin.
+     */
+    'demo_mode' => filter_var(env('DEMO_MODE', false), FILTER_VALIDATE_BOOL),
+
+    /*
+     * Empresa e administrador iniciais, usados por app:create-admin quando o
+     * modo demo está desligado.
+     */
+    'bootstrap_admin' => [
+        'company' => env('ADMIN_COMPANY'),
+        'company_cnpj' => env('ADMIN_COMPANY_CNPJ', ''),
+        'name' => env('ADMIN_NAME', 'Administrador'),
+        'email' => env('ADMIN_EMAIL'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------

@@ -1,6 +1,8 @@
 <?php
 
+use App\Console\Commands\CreateAdminCommand;
 use App\Console\Commands\SeedCommand;
+use App\Console\Commands\SyncTrackingCommand;
 use App\Http\Middleware\ForceJsonResponse;
 use App\Http\Middleware\TenantMiddleware;
 use App\Http\Middleware\TokenAuthMiddleware;
@@ -17,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withCommands([
         SeedCommand::class,
+        CreateAdminCommand::class,
+        SyncTrackingCommand::class,
     ])
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([

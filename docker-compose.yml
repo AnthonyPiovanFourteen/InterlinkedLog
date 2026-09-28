@@ -36,6 +36,14 @@ services:
       CACHE_STORE: database
       SESSION_DRIVER: database
       QUEUE_CONNECTION: database
+      # Modo demonstração: popula transportadoras, tabelas de frete, cotações e
+      # contratos fictícios no primeiro boot. Desligado por padrão.
+      DEMO_MODE: ${DEMO_MODE:-false}
+      # Primeiro acesso sem modo demo — o entrypoint cria empresa e admin.
+      ADMIN_COMPANY: ${ADMIN_COMPANY:-}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrador}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
     depends_on:
       mysql:
         condition: service_healthy
