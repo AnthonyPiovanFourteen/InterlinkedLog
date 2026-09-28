@@ -205,6 +205,27 @@ existir no host, o primeiro `run` cria o diretório vazio (root) — para
 rodar `composer install` no host depois, remova com `rmdir
 backend/vendor`.
 
+## Natureza da cotação (decisão registrada)
+
+**A cotação é orientativa, não vinculante.** O valor no PDF de solicitação de
+coleta é a reapresentação do preço da tabela da transportadora — é o que o
+próprio documento declara (*"VALORES (Conforme Tabela da Transportadora)"*), e
+não há campo de assinatura nem aceite. A confirmação do frete acontece com a
+transportadora, que emite o CT-e real (campo `cte_number`, preenchido depois via
+`PATCH`).
+
+Consequências assumidas:
+
+- **Não há versionamento de tabela de frete.** O `save()` do repositório
+  sobrescreve rotas, faixas e taxas. Uma cotação de setembro não pode ser
+  reconstruída se a tabela mudar em outubro — o `quotation_results` guarda o
+  preço final, não a tabela que o gerou. Se a cotação passar a ser vinculante
+  (cliente contestando valor), versionamento vira pré-requisito.
+- **O `document_number` não é documento fiscal.** Antes usava o prefixo `CT-e `,
+  o que dava a impressão de ser um Conhecimento de Transporte emitido pela
+  plataforma. Passou a ser `SC-AAAAMMDD-NNNN` (Solicitação de Coleta), coerente
+  com o título do PDF. O CT-e real continua vindo da transportadora.
+
 ## Cotações e CEP
 
 O CEP é resolvido primeiro pelo mapa local (22 prefixos, sem rede) e, fora

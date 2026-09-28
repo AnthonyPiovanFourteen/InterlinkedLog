@@ -15,9 +15,14 @@ class QuotationFlowTest extends ApiTestCase
         $this->assertCount(8, $quotation['results']);
 
         foreach ($quotation['results'] as $result) {
+            // Peso faturável = max(peso 45, volume 0,15 × cubagem 300) = 45 kg
+            // → faixa [31,100] → frete 142,00; piso (frete_minimo 50) não incide.
             $this->assertSame(142, $result['freight_value']);
-            $this->assertSame(698.90, $result['fees']);
-            $this->assertSame(840.90, $result['final_value']);
+            // Taxas = ad_valorem 0,30% (15,00) + gris 18,90 + despacho 25,00
+            //       + pedágio 5% (250,00) + tde 40,00 = 348,90.
+            // frete_minimo e cubagem NÃO entram: são piso e fator, não taxas.
+            $this->assertSame(348.90, $result['fees']);
+            $this->assertSame(490.90, $result['final_value']);
             $this->assertSame(3, $result['deadline']);
         }
 

@@ -1,0 +1,27 @@
+{
+  "_comment": "Tabela de frete: São Paulo → Nordeste (Salvador BA / Recife PE / Fortaleza CE)",
+  "_uso": "POST /api/v1/freight-tables  |  Substitua CARRIER_ID pelo UUID real (veja criar-tabelas.sh)",
+  "name": "Tabela Nordeste 2026 — São Paulo",
+  "carrier_id": "CARRIER_ID",
+  "origin_city": "São Paulo",
+  "validity_start": "2026-01-01",
+  "validity_end": "2026-12-31",
+  "routes": [
+    { "city": "Salvador",   "state": "BA", "deadline": 5 },
+    { "city": "Recife",     "state": "PE", "deadline": 6 },
+    { "city": "Fortaleza",  "state": "CE", "deadline": 7 }
+  ],
+  "weight_ranges": [
+    { "start": 0,   "end": 30,  "value": 145.00 },
+    { "start": 31,  "end": 100, "value": 260.00 },
+    { "start": 101, "end": 300, "value": 480.00 }
+  ],
+  "fees": [
+    { "type": "ad_valorem", "value": 0.35, "percentage": 0.35 },
+    { "type": "gris",       "value": 22.00, "percentage": 0 },
+    { "type": "despacho",   "value": 30.00, "percentage": 0 },
+    { "type": "pedagio",    "value": 8.00,  "percentage": 8.00 },
+    { "type": "tde",        "value": 45.00, "percentage": 0 },
+    { "type": "frete_minimo", "value": 65.00, "percentage": 0 }
+  ]
+}

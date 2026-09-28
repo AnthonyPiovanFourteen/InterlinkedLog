@@ -1,0 +1,26 @@
+{
+  "_comment": "Tabela de frete: São Paulo → Centro-Oeste (Brasília DF / Goiânia GO)",
+  "_uso": "POST /api/v1/freight-tables  |  Substitua CARRIER_ID pelo UUID real (veja criar-tabelas.sh)",
+  "name": "Tabela Centro-Oeste 2026 — São Paulo",
+  "carrier_id": "CARRIER_ID",
+  "origin_city": "São Paulo",
+  "validity_start": "2026-01-01",
+  "validity_end": "2026-12-31",
+  "routes": [
+    { "city": "Brasília",  "state": "DF", "deadline": 3 },
+    { "city": "Goiânia",   "state": "GO", "deadline": 3 }
+  ],
+  "weight_ranges": [
+    { "start": 0,   "end": 30,  "value": 110.00 },
+    { "start": 31,  "end": 100, "value": 195.00 },
+    { "start": 101, "end": 300, "value": 350.00 }
+  ],
+  "fees": [
+    { "type": "ad_valorem", "value": 0.30, "percentage": 0.30 },
+    { "type": "gris",       "value": 18.90, "percentage": 0 },
+    { "type": "despacho",   "value": 25.00, "percentage": 0 },
+    { "type": "pedagio",    "value": 5.00,  "percentage": 5.00 },
+    { "type": "tde",        "value": 40.00, "percentage": 0 },
+    { "type": "frete_minimo", "value": 55.00, "percentage": 0 }
+  ]
+}

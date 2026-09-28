@@ -19,7 +19,7 @@ class ContractFlowTest extends ApiTestCase
         $response->assertStatus(201)
             ->assertJsonPath('data.status', 'Agendado')
             ->assertJsonPath('data.nf_number', '000100');
-        $this->assertMatchesRegularExpression('/^CT-e \d{12}$/', $response->json('data.document_number'));
+        $this->assertMatchesRegularExpression('/^SC-\d{8}-\d{4}$/', $response->json('data.document_number'));
 
         $contractId = $response->json('data.id');
         $this->assertDatabaseHas('contracts', [

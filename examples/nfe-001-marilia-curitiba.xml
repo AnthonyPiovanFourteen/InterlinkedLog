@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NF-e de exemplo 1: Marília (SP) → Curitiba (PR) | 25 kg | R$ 8.500,00 -->
+<!-- Use em: Cotações → Nova Cotação → "Importar XML da NF-e" -->
+<nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
+  <NFe>
+    <infNFe>
+      <ide>
+        <nNF>005001</nNF>
+        <natOp>Venda de mercadoria</natOp>
+        <dhEmi>2026-06-16T10:30:00-03:00</dhEmi>
+      </ide>
+      <emit>
+        <CNPJ>12345678000199</CNPJ>
+        <xNome>Empresa Modelo Ltda</xNome>
+        <enderEmit>
+          <xLgr>Av. Sampaio Vidal</xLgr>
+          <nro>1050</nro>
+          <xMun>Marília</xMun>
+          <UF>SP</UF>
+          <CEP>17500000</CEP>
+        </enderEmit>
+      </emit>
+      <dest>
+        <CNPJ>98765432000188</CNPJ>
+        <xNome>Distribuidora Sul Ltda</xNome>
+        <enderDest>
+          <xLgr>Rua XV de Novembro</xLgr>
+          <nro>220</nro>
+          <xMun>Curitiba</xMun>
+          <UF>PR</UF>
+          <CEP>80000200</CEP>
+        </enderDest>
+      </dest>
+      <total>
+        <ICMSTot>
+          <vProd>8500.00</vProd>
+          <vNF>8500.00</vNF>
+        </ICMSTot>
+      </total>
+      <transp>
+        <vol>
+          <qVol>8</qVol>
+          <pesoL>22.000</pesoL>
+          <pesoB>25.000</pesoB>
+        </vol>
+      </transp>
+    </infNFe>
+  </NFe>
+</nfeProc>
