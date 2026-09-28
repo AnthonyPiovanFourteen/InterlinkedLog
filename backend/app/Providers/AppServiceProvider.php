@@ -14,7 +14,6 @@ use App\Domain\Repositories\SystemLogRepository;
 use App\Domain\Repositories\TrackingEventRepository;
 use App\Domain\Repositories\UserRepository;
 use App\Domain\Services\AuthService;
-use App\Domain\Services\CarrierQuoteShadowRunner;
 use App\Domain\Services\CepLookupService;
 use App\Domain\Services\FreightBenchmarkService;
 use App\Domain\Services\QuotationEngineService;
@@ -40,7 +39,6 @@ use App\Infrastructure\Repositories\Eloquent\EloquentTrackingEventRepository;
 use App\Infrastructure\Repositories\Eloquent\EloquentUserRepository;
 use App\Infrastructure\Services\ContractFreightBenchmark;
 use App\Infrastructure\Services\DatabaseTransactionManager;
-use App\Infrastructure\Services\LoggingCarrierQuoteShadowRunner;
 use App\Infrastructure\Services\QuotationEngine;
 use App\Infrastructure\Services\ReportGenerator;
 use App\Infrastructure\Services\TokenAuthService;
@@ -87,12 +85,6 @@ class AppServiceProvider extends ServiceProvider
             ->needs('$gateways')
             ->give(fn ($app) => $app->tagged('carrier.gateways'));
 
-        $this->app->singleton(CarrierQuoteShadowRunner::class, fn ($app) => new LoggingCarrierQuoteShadowRunner(
-            $app->tagged('carrier.gateways'),
-            $app->make(CarrierRepository::class),
-            $app->make(CarrierCredentialRepository::class),
-            $app->make(SystemLogRepository::class),
-        ));
         $this->app->singleton(CepLookupService::class, ViaCepLookupService::class);
         $this->app->singleton(TransactionManager::class, DatabaseTransactionManager::class);
         $this->app->singleton(ReportService::class, ReportGenerator::class);
